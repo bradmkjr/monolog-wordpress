@@ -94,6 +94,7 @@ class WordPressHandler extends AbstractProcessingHandler
         }
 
         $sql = "CREATE TABLE $table_name (
+            ID_column INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
             channel VARCHAR(255), 
             level INTEGER, 
             message LONGTEXT, 
@@ -123,7 +124,7 @@ class WordPressHandler extends AbstractProcessingHandler
             $this->initialize();
         }
         //'context' contains the array
-        $contentArray = array_merge(array(
+        $contentArray = array_merge(array(            
             'channel' => $record['channel'],
             'level' => $record['level'],
             'message' => $record['message'],
@@ -137,7 +138,7 @@ class WordPressHandler extends AbstractProcessingHandler
 
         $table_name = $this->prefix . $this->table;
 
-        $this->wpdb->insert( $table_name, $values );
+        $this->wpdb->insert( $table_name, $contentArray );
 
     }
 }
