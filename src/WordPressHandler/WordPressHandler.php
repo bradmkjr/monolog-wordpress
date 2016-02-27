@@ -85,12 +85,9 @@ class WordPressHandler extends AbstractProcessingHandler
 
         $table_name = $this->prefix . $this->table; 
 
-        $columns = "";
-        $fields = "";
+        $additionalFields = '';
         foreach ($this->additionalFields as $f) {
-            $columns.= ", $f";
-            $additionalFields.=", $f TEXT NULL DEFAULT NULL";
-            $fields.= ", %s";
+            $additionalFields.=",\n$f TEXT NULL DEFAULT NULL";            
         }
 
         $sql = "CREATE TABLE $table_name (
@@ -98,18 +95,13 @@ class WordPressHandler extends AbstractProcessingHandler
             channel VARCHAR(255), 
             level INTEGER, 
             message LONGTEXT, 
-            time INTEGER UNSIGNED
-            $additionalFields
-            , PRIMARY KEY  (id)
+            time INTEGER UNSIGNED$additionalFields, 
+            PRIMARY KEY  (id)
             ) $charset_collate;";
+             
 
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
-
-        //Prepare statement
-
-        $this->statement = 'INSERT INTO `'.$this->prefix.$this->table.'` (channel, level, message, time'.$columns.')
-            VALUES (%s, %s, %s, %s'.$fields.')';
 
         $this->initialized = true;
     }
