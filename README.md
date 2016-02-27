@@ -1,4 +1,4 @@
-monolog-wordpress [![Build Status](https://travis-ci.org/bradmkjr/monolog-wordpress.svg?branch=master)](https://travis-ci.org/bradmkjr/monolog-wordpress)
+monolog-wordpress
 =============
 
 
