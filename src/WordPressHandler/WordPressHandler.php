@@ -31,6 +31,10 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     private $table = 'logs';
     /**
+     * @var string the table prefix to store the logs in
+     */
+    private $prefix = 'wp_';
+    /**
      * @var string[] additional fields to be stored in the database
      *
      * For each field $field, an additional context field with the name $field
@@ -58,6 +62,8 @@ class WordPressHandler extends AbstractProcessingHandler
             $this->wpdb = $wpdb;
         }
         $this->table = $table;
+        $this->prefix = $this->wpdb->prefix;
+
         $this->additionalFields = $additionalFields;
         parent::__construct($level, $bubble);
     }
@@ -66,47 +72,43 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     private function initialize()
     {
-        $this->wpdb->exec(
-            'CREATE TABLE IF NOT EXISTS `'.$this->table.'` '
-            .'(channel VARCHAR(255), level INTEGER, message LONGTEXT, time INTEGER UNSIGNED)'
-        );
-        //Read out actual columns
-        $actualFields = array();
-        $rs = $this->wpdb->query('SELECT * FROM `'.$this->table.'` LIMIT 0');
-        for ($i = 0; $i < $rs->columnCount(); $i++) {
-            $col = $rs->getColumnMeta($i);
-            $actualFields[] = $col['name'];
-        }
-        //Calculate changed entries
-        $removedColumns = array_diff(
-            $actualFields,
-            $this->additionalFields,
-            array('channel', 'level', 'message', 'time')
-        );
-        $addedColumns = array_diff($this->additionalFields, $actualFields);
-        //Remove columns
-        if (!empty($removedColumns)) {
-            foreach ($removedColumns as $c) {
-                $this->wpdb->exec('ALTER TABLE `'.$this->table.'` DROP `'.$c.'`;');
-            }
-        }
-        //Add columns
-        if (!empty($addedColumns)) {
-            foreach ($addedColumns as $c) {
-                $this->wpdb->exec('ALTER TABLE `'.$this->table.'` add `'.$c.'` TEXT NULL DEFAULT NULL;');
-            }
-        }
-        //Prepare statement
+
+        // referenced
+        // https://codex.wordpress.org/Creating_Tables_with_Plugins 
+
+        // $this->wpdb->exec(
+        //     'CREATE TABLE IF NOT EXISTS `'.$this->table.'` '
+        //     .'(channel VARCHAR(255), level INTEGER, message LONGTEXT, time INTEGER UNSIGNED)'
+        // );
+
+        $charset_collate = $this->wpdb->get_charset_collate();
+
+        $table_name = $this->prefix . $this->table; 
+
         $columns = "";
         $fields = "";
         foreach ($this->additionalFields as $f) {
             $columns.= ", $f";
-            $fields.= ", :$f";
+            $additionalFields.=", $f TEXT NULL DEFAULT NULL";
+            $fields.= ", %s";
         }
-        $this->statement = $this->wpdb->prepare(
-            'INSERT INTO `'.$this->table.'` (channel, level, message, time'.$columns.')
-            VALUES (:channel, :level, :message, :time'.$fields.')'
-        );
+
+        $sql = "CREATE TABLE $table_name (
+            channel VARCHAR(255), 
+            level INTEGER, 
+            message LONGTEXT, 
+            time INTEGER UNSIGNED
+            $additionalFields
+            ) $charset_collate;";
+
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        dbDelta( $sql );
+
+        //Prepare statement
+
+        $this->statement = 'INSERT INTO `'.$this->prefix.$this->table.'` (channel, level, message, time'.$columns.')
+            VALUES (%s, %s, %s, %s'.$fields.')';
+
         $this->initialized = true;
     }
     /**
@@ -132,6 +134,6 @@ class WordPressHandler extends AbstractProcessingHandler
             $this->additionalFields,
             array_fill(0, count($this->additionalFields), null)
         );
-        $this->statement->execute($contentArray);
+        $this->wpdb->execute( $this->wpdb->prepare( $this->statement, $contentArray ) );
     }
 }
