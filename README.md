@@ -10,6 +10,9 @@ The class further allows to dynamically add extra attributes, which are stored i
 Original based on:
 Homepage: http://www.d-herrmann.de/projects/monolog-mysql-handler/
 
+# Disclaimer
+This is a very simple handler for monolog. It has a critical design flaw, which is it runs dbDelta on the log table everytime it is initialized. This allows the log to be very dynamic, but the trade off is a performance hit. dbDelta performs potentially dozens of SQL commands to compare the existing table structure to the proposed version. Depending on MySQL settings this may even slow down the site if tables are locked when trying to be written into. For my personal needs, I wanted to have a quick way to begin using Monolog, with plans to transistion to Mongo DB or cloud later, instead of using WordPress MySQL wrapper. This version works for custom plugin development, but I would not advise to distrubte this code in a public repository for general use on high traffic sites. You have been warned.
+
 # Installation
 monolog-wordpress is available via composer. Just add the following line to your required section in composer.json and do a `php composer.phar update`.
 
@@ -21,7 +24,6 @@ monolog-wordpress is available via composer. Just add the following line to your
 Just use it as any other Monolog Handler, push it to the stack of your Monolog Logger instance. The Handler however needs some parameters:
 
 - **$wpdb** Global instance of your DB connection.
-- **$prefix** The table prefix where the logs should be stored
 - **$table** The table name where the logs should be stored
 - **$additionalFields** simple array of additional database fields, which should be stored in the database. The columns are created automatically, and the fields can later be used in the extra context section of a record. See examples below. _Defaults to an empty array()_
 - **$level** can be any of the standard Monolog logging levels. Use Monologs statically defined contexts. _Defaults to Logger::DEBUG_
