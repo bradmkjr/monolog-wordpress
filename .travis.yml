@@ -27,5 +27,4 @@ before_script:
   - git clone https://github.com/Koodimonni/wordpress-test-template wp-tests
   - bash wp-tests/bin/install-wp-tests.sh test root '' localhost $WP_VERSION
 
-script:
-  - phpcs --standard=WordPress ./**/*.php
+script: phpunit tests/WordPressHandler/WordPressHandlerTest.php

@@ -134,6 +134,10 @@ class WordPressHandler extends AbstractProcessingHandler
             $this->additionalFields,
             array_fill(0, count($this->additionalFields), null)
         );
-        $this->wpdb->execute( $this->wpdb->prepare( $this->statement, $contentArray ) );
+
+        $table_name = $this->prefix . $this->table;
+
+        $this->wpdb->insert( $table_name, $values );
+
     }
 }
