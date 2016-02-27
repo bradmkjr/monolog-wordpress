@@ -51,5 +51,35 @@ $logger->pushHandler($wordPressHandler);
 $logger->addWarning("This is a great message, woohoo!", array('username'  => 'John Doe', 'userid'  => 245));
 ```
 
+Example to use in your custom WordPress Plugin
+
+```php
+add_action( 'plugins_loaded', 'demo_function' );
+
+function demo_function(){
+
+require __DIR__ . '/vendor/autoload.php';
+
+//Import class
+use WordPressHandler\WordPressHandler;
+
+//ensure access to global $wpdb
+global $wpdb;
+
+//Create WordPressHandler
+$wordPressHandler = new WordPressHandler($wpdb, "log", array('app', 'version'), \Monolog\Logger::DEBUG);
+
+$context = 'test-plugin-logging';
+
+//Create logger
+$logger = new \Monolog\Logger($context);
+$logger->pushHandler($wordPressHandler);
+
+//Now you can use the logger, and further attach additional information
+$logger->addWarning("This is a great message, woohoo!", array('app'  => 'Test Plugin', 'version'  => '2.4.5'));
+
+}
+```
+
 # License
 This tool is free software and is distributed under the MIT license. Please have a look at the LICENSE file for further information.
