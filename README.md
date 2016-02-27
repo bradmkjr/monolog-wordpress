@@ -1,5 +1,7 @@
-monolog-wordpress
+monolog-wordpress [![Build Status](https://travis-ci.org/bradmkjr/monolog-wordpress.svg?branch=master)](https://travis-ci.org/bradmkjr/monolog-wordpress)
 =============
+
+
 
 WordPress Handler for Monolog, which allows to store log messages in a MySQL Table.
 It can log text messages to a specific table, and creates the table automatically if it does not exist.
