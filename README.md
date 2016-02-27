@@ -41,6 +41,8 @@ global $wpdb;
 //Create WordPressHandler
 $wordPressHandler = new WordPressHandler($wpdb, "log", array('username', 'userid'), \Monolog\Logger::DEBUG);
 
+$context = 'channel-name';
+
 //Create logger
 $logger = new \Monolog\Logger($context);
 $logger->pushHandler($wordPressHandler);
