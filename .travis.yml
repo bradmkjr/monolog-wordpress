@@ -14,7 +14,7 @@ php:
   # - 5.4
 
 env:
-  - WP_PROJECT_TYPE=plugin WP_VERSION=latest WP_MULTISITE=0 WP_TEST_URL=http://localhost:12000 WP_TEST_USER=test WP_TEST_USER_PASS=test
+  # - WP_PROJECT_TYPE=plugin WP_VERSION=latest WP_MULTISITE=0 WP_TEST_URL=http://localhost:12000 WP_TEST_USER=test WP_TEST_USER_PASS=test
 
 matrix:
   allow_failures:
@@ -24,7 +24,10 @@ before_script:
   # Install composer packages before trying to activate themes or plugins
   # - composer install
 
-  - git clone https://github.com/Koodimonni/wordpress-test-template wp-tests
-  - bash wp-tests/bin/install-wp-tests.sh test root '' localhost $WP_VERSION
+  # - git clone https://github.com/Koodimonni/wordpress-test-template wp-tests
+  # - bash wp-tests/bin/install-wp-tests.sh test root '' localhost $WP_VERSION
+
+# script:
+#  - phpcs --standard=WordPress ./**/*.php
 
 script: phpunit tests/WordPressHandler/WordPressHandlerTest.php
