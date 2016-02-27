@@ -94,7 +94,7 @@ class WordPressHandler extends AbstractProcessingHandler
         }
 
         $sql = "CREATE TABLE $table_name (
-            id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            id INT NOT NULL AUTO_INCREMENT PRIMARY KEY (id),
             channel VARCHAR(255), 
             level INTEGER, 
             message LONGTEXT, 
