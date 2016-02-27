@@ -1,0 +1,19 @@
+{
+    "name": "bradmkjr/monolog-wordpress",
+    "description": "A handler for Monolog that sends messages to MySQL via WordPress Functions",
+    "keywords": ["wordpress", "log", "logging", "monolog", "mysql", "database"],
+    "homepage": "https://github.com/bradmkjr/monolog-wordpress",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bradford Knowlton",
+            "email": "brad@ucanbonline.net"
+        }
+    ],
+    "require": {
+        "monolog/monolog": ">1.4.0"
+    },
+    "autoload": {
+        "psr-4": {"WordPressHandler\\": "src/WordPressHandler"}
+    }
+}
