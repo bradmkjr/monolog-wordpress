@@ -94,12 +94,13 @@ class WordPressHandler extends AbstractProcessingHandler
         }
 
         $sql = "CREATE TABLE $table_name (
-            id INT NOT NULL AUTO_INCREMENT PRIMARY KEY (id),
+            id INT(11) NOT NULL AUTO_INCREMENT,
             channel VARCHAR(255), 
             level INTEGER, 
             message LONGTEXT, 
             time INTEGER UNSIGNED
             $additionalFields
+            , PRIMARY KEY  (id)
             ) $charset_collate;";
 
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
