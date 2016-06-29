@@ -100,7 +100,7 @@ class WordPressHandler extends AbstractProcessingHandler
             channel VARCHAR(255), 
             level INTEGER, 
             message LONGTEXT, 
-            time INTEGER UNSIGNED$extraFields.$additionalFields, 
+            time INTEGER UNSIGNED$extraFields$additionalFields, 
             PRIMARY KEY  (id)
             ) $charset_collate;";
              
