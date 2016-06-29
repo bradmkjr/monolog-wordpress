@@ -131,12 +131,12 @@ class WordPressHandler extends AbstractProcessingHandler
         
         $recordExtra = (isset($record['formatted']['extra'])) ? $record['formatted']['extra'] : $record['extra'];
         	
-        array_walk_recursive($recordExtra, function(&$value) {
+        array_walk($recordExtra, function(&$value, $key) {
         	if(is_array($value) || $value instanceof \Traversable) {
         		$value = json_encode($value);
         	}
         });
-        	
+        
         $contentArray = $contentArray + $recordExtra;
         
         //Fill content array with "null" values if not provided
