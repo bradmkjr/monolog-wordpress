@@ -129,7 +129,15 @@ class WordPressHandler extends AbstractProcessingHandler
             'time' => $record['datetime']->format('U')
         ), $record['context']);
         
-        $contentArray = $contentArray + $record['extra'];
+        $recordExtra = (isset($record['formatted']['extra'])) ? $record['formatted']['extra'] : $record['extra'];
+        	
+        array_walk_recursive($recordExtra, function(&$value) {
+        	if(is_array($value) || $value instanceof \Traversable) {
+        		$value = json_encode($value);
+        	}
+        });
+        	
+        $contentArray = $contentArray + $recordExtra;
         
         //Fill content array with "null" values if not provided
         $contentArray = $contentArray + array_combine(
