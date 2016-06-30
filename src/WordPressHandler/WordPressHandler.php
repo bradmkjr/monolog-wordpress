@@ -70,7 +70,7 @@ class WordPressHandler extends AbstractProcessingHandler
     /**
      * Initializes this handler by creating the table if it not exists
      */
-    private function initialize()
+    private function initialize(array $record)
     {
 
         // referenced
@@ -84,6 +84,11 @@ class WordPressHandler extends AbstractProcessingHandler
         $charset_collate = $this->wpdb->get_charset_collate();
 
         $table_name = $this->prefix . $this->table; 
+        
+        $extraFields = '';
+        foreach ($record['extra'] as $key => $val) {
+        	$extraFields.=",\n$key TEXT NULL DEFAULT NULL";
+        }
 
         $additionalFields = '';
         foreach ($this->additionalFields as $f) {
@@ -95,7 +100,7 @@ class WordPressHandler extends AbstractProcessingHandler
             channel VARCHAR(255), 
             level INTEGER, 
             message LONGTEXT, 
-            time INTEGER UNSIGNED$additionalFields, 
+            time INTEGER UNSIGNED$extraFields$additionalFields, 
             PRIMARY KEY  (id)
             ) $charset_collate;";
              
@@ -114,7 +119,7 @@ class WordPressHandler extends AbstractProcessingHandler
     protected function write(array $record)
     {
         if (!$this->initialized) {
-            $this->initialize();
+            $this->initialize($record);
         }
         //'context' contains the array
         $contentArray = array_merge(array(            
@@ -123,6 +128,17 @@ class WordPressHandler extends AbstractProcessingHandler
             'message' => $record['message'],
             'time' => $record['datetime']->format('U')
         ), $record['context']);
+        
+        $recordExtra = (isset($record['formatted']['extra'])) ? $record['formatted']['extra'] : $record['extra'];
+        	
+        array_walk($recordExtra, function(&$value, $key) {
+        	if(is_array($value) || $value instanceof \Traversable) {
+        		$value = json_encode($value);
+        	}
+        });
+        
+        $contentArray = $contentArray + $recordExtra;
+        
         //Fill content array with "null" values if not provided
         $contentArray = $contentArray + array_combine(
             $this->additionalFields,
