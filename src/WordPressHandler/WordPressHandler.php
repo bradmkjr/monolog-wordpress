@@ -139,11 +139,13 @@ class WordPressHandler extends AbstractProcessingHandler
         
         $contentArray = $contentArray + $recordExtra;
         
-        //Fill content array with "null" values if not provided
-        $contentArray = $contentArray + array_combine(
-            $this->additionalFields,
-            array_fill(0, count($this->additionalFields), null)
-        );
+        if(count($this->additionalFields) > 0) {
+	        //Fill content array with "null" values if not provided
+	        $contentArray = $contentArray + array_combine(
+	            $this->additionalFields,
+	            array_fill(0, count($this->additionalFields), null)
+	        );
+        }
 
         $table_name = $this->prefix . $this->table;
 
