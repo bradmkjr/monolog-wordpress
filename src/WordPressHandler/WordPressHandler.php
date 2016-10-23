@@ -72,7 +72,8 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     private function initialize(array $record)
     {
-
+		global $wpdb;
+    	
         // referenced
         // https://codex.wordpress.org/Creating_Tables_with_Plugins 
 
@@ -103,7 +104,10 @@ class WordPressHandler extends AbstractProcessingHandler
             time INTEGER UNSIGNED$extraFields$additionalFields, 
             PRIMARY KEY  (id)
             ) $charset_collate;";
-             
+          
+        if (!is_null($this->wpdb)) {
+        	$wpdb = $this->wpdb;
+        }
 
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
