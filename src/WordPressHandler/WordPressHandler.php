@@ -70,7 +70,7 @@ class WordPressHandler extends AbstractProcessingHandler
     /**
      * Initializes this handler by creating the table if it not exists
      */
-    private function initialize(array $record)
+    public function initialize(array $record)
     {
 
         // referenced
