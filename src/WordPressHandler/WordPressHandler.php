@@ -17,7 +17,7 @@ class WordPressHandler extends AbstractProcessingHandler
     /**
      * @var bool defines whether the MySQL connection is been initialized
      */
-    private $initialized = false;
+    public $initialized = false;
     /**
      * @var WPDB wpdb object of database connection
      */
