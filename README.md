@@ -15,7 +15,7 @@ This is a very simple handler for monolog. This version works for custom plugin 
 monolog-wordpress is available via composer. Just add the following line to your required section in composer.json and do a `php composer.phar update`.
 
 ```
-"bradmkjr/monolog-wordpress": ">1.6.1"
+"bradmkjr/monolog-wordpress": ">1.6.2"
 ```
 
 # Usage
@@ -41,8 +41,11 @@ global $wpdb;
 //Create WordPressHandler
 $wordPressHandler = new WordPressHandler($wpdb, "log", array('username', 'userid'), \Monolog\Logger::DEBUG);
 
+// setup array of extra fields
+$record = ['extra' => []];
+
 // creates database table if needed, add extra fields from above
-$wordPressHandler->initialize();
+$wordPressHandler->initialize($record);
 
 $context = 'channel-name';
 
@@ -69,7 +72,11 @@ function register_activation_hook(__FILE__, function() {
         \Monolog\Logger::DEBUG
     );
 
-    $handler->initialize();
+    // setup array of extra fields
+    $record = ['extra' => []];
+
+    // creates database table if needed, add extra fields from above
+    $handler->initialize($record);
 });
 
 // Now somewhere else in my plugin where I want to use the logger

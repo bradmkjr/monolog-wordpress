@@ -79,7 +79,7 @@ class WordPressHandler extends AbstractProcessingHandler
     /**
      * Initializes this handler by creating the table if it not exists
      */
-    public function initialize()
+    public function initialize(array $record)
     {
 
         // referenced
@@ -94,6 +94,13 @@ class WordPressHandler extends AbstractProcessingHandler
 
         $table_name = $this->get_table_name();
 
+        // allow for Extra fields
+        $extraFields = '';
+        foreach ($record['extra'] as $key => $val) {
+            $extraFields.=",\n$key TEXT NULL DEFAULT NULL";
+        }
+
+        // additional fields
         $additionalFields = '';
         foreach ($this->additionalFields as $f) {
             $additionalFields.=",\n$f TEXT NULL DEFAULT NULL";
@@ -104,7 +111,7 @@ class WordPressHandler extends AbstractProcessingHandler
             channel VARCHAR(255),
             level INTEGER,
             message LONGTEXT,
-            time INTEGER UNSIGNED$additionalFields,
+            time INTEGER UNSIGNED$extraFields$additionalFields,
             PRIMARY KEY  (id)
             ) $charset_collate;";
 
@@ -145,8 +152,10 @@ class WordPressHandler extends AbstractProcessingHandler
             'time' => $record['datetime']->format('U')
         ), $record['context']);
 
+        // extra out formatted or unformatted extra values
         $recordExtra = (isset($record['formatted']['extra'])) ? $record['formatted']['extra'] : $record['extra'];
 
+        // json encode values as needed
         array_walk($recordExtra, function(&$value, $key) {
         	if(is_array($value) || $value instanceof \Traversable) {
         		$value = json_encode($value);
