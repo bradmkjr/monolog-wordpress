@@ -11,7 +11,7 @@ Original based on:
 Homepage: http://www.d-herrmann.de/projects/monolog-mysql-handler/
 
 # Disclaimer
-This is a very simple handler for monolog. It has a critical design flaw, which is it runs dbDelta on the log table everytime it is initialized. This allows the log to be very dynamic, but the trade off is a performance hit. dbDelta performs potentially dozens of SQL commands to compare the existing table structure to the proposed version. Depending on MySQL settings this may even slow down the site if tables are locked when trying to be written into. For my personal needs, I wanted to have a quick way to begin using Monolog, with plans to transistion to Mongo DB or cloud later, instead of using WordPress MySQL wrapper. This version works for custom plugin development, but I would not advise to distrubte this code in a public repository for general use on high traffic sites. You have been warned.
+This is a very simple handler for monolog. This version works for custom plugin development, but I would not advise to distrubte this code in a public repository for general use on high traffic sites. You have been warned.
 
 # Installation
 monolog-wordpress is available via composer. Just add the following line to your required section in composer.json and do a `php composer.phar update`.
