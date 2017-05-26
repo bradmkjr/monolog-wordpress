@@ -79,7 +79,7 @@ class WordPressHandler extends AbstractProcessingHandler
     /**
      * Initializes this handler by creating the table if it not exists
      */
-    public function initialize(array $record)
+    public function initialize()
     {
 
         // referenced
@@ -94,11 +94,6 @@ class WordPressHandler extends AbstractProcessingHandler
 
         $table_name = $this->get_table_name();
 
-        $extraFields = '';
-        foreach ($record['extra'] as $key => $val) {
-        	$extraFields.=",\n$key TEXT NULL DEFAULT NULL";
-        }
-
         $additionalFields = '';
         foreach ($this->additionalFields as $f) {
             $additionalFields.=",\n$f TEXT NULL DEFAULT NULL";
@@ -109,7 +104,7 @@ class WordPressHandler extends AbstractProcessingHandler
             channel VARCHAR(255),
             level INTEGER,
             message LONGTEXT,
-            time INTEGER UNSIGNED$extraFields$additionalFields,
+            time INTEGER UNSIGNED$additionalFields,
             PRIMARY KEY  (id)
             ) $charset_collate;";
 

@@ -1,8 +1,6 @@
 monolog-wordpress
 =============
 
-
-
 WordPress Handler for Monolog, which allows to store log messages in a MySQL Table.
 It can log text messages to a specific table, and creates the table automatically if it does not exist.
 The class further allows to dynamically add extra attributes, which are stored in a separate database field, and can be used for later analyzing and sorting.
@@ -17,7 +15,7 @@ This is a very simple handler for monolog. This version works for custom plugin 
 monolog-wordpress is available via composer. Just add the following line to your required section in composer.json and do a `php composer.phar update`.
 
 ```
-"bradmkjr/monolog-wordpress": ">1.6.0"
+"bradmkjr/monolog-wordpress": ">1.6.1"
 ```
 
 # Usage
@@ -43,6 +41,9 @@ global $wpdb;
 //Create WordPressHandler
 $wordPressHandler = new WordPressHandler($wpdb, "log", array('username', 'userid'), \Monolog\Logger::DEBUG);
 
+// creates database table if needed, add extra fields from above
+$wordPressHandler->initialize();
+
 $context = 'channel-name';
 
 //Create logger
@@ -52,6 +53,56 @@ $logger->pushHandler($wordPressHandler);
 //Now you can use the logger, and further attach additional information
 $logger->addWarning("This is a great message, woohoo!", array('username'  => 'John Doe', 'userid'  => 245));
 ```
+
+Required code to setup tables on plugin activation:
+
+```php
+require __DIR__.'/vendor/autoload.php';
+
+// Create the logs table if it doesn't already exist on plugin activation
+function register_activation_hook(__FILE__, function() {
+    global $wpdb;
+
+    $handler = new \WordPressHandler\WordPressHandler(
+        $wpdb, "logs",
+        array('username', 'userid'),
+        \Monolog\Logger::DEBUG
+    );
+
+    $handler->initialize();
+});
+
+// Now somewhere else in my plugin where I want to use the logger
+$logger = new \Monolog\Logger('channel');
+$handler = new \WordPressHandler\WordPressHandler(
+    $wpdb, "logs",
+    [],
+    \Monolog\Logger::DEBUG
+);
+$handler->initialized = true; // Don't do any extra work - we've already done it.
+$logger->pushHandler($handler);
+
+$logger->warn('Some message');
+```
+
+Example code to delete tables on plugin deactivation:
+
+```php
+register_uninstall_hook(__FILE__, 'my_plugin_uninstall');
+function my_plugin_uninstall()
+{
+    require __DIR__."/vendor/autoload.php";
+    global $wpdb;
+
+    $handler = new \WordPressHandler\WordPressHandler(
+        $wpdb, "logs",
+        [],
+        \Monolog\Logger::DEBUG
+    );
+    $handler->uninitialize();
+}
+```
+
 
 Example to use in your custom WordPress Plugin
 
