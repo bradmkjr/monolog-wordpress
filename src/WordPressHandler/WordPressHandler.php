@@ -74,7 +74,7 @@ class WordPressHandler extends AbstractProcessingHandler
     {
 
         // referenced
-        // https://codex.wordpress.org/Creating_Tables_with_Plugins 
+        // https://codex.wordpress.org/Creating_Tables_with_Plugins
 
         // $this->wpdb->exec(
         //     'CREATE TABLE IF NOT EXISTS `'.$this->table.'` '
@@ -83,8 +83,8 @@ class WordPressHandler extends AbstractProcessingHandler
 
         $charset_collate = $this->wpdb->get_charset_collate();
 
-        $table_name = $this->prefix . $this->table; 
-        
+        $table_name = $this->prefix . $this->table;
+
         $extraFields = '';
         foreach ($record['extra'] as $key => $val) {
         	$extraFields.=",\n$key TEXT NULL DEFAULT NULL";
@@ -92,24 +92,35 @@ class WordPressHandler extends AbstractProcessingHandler
 
         $additionalFields = '';
         foreach ($this->additionalFields as $f) {
-            $additionalFields.=",\n$f TEXT NULL DEFAULT NULL";            
+            $additionalFields.=",\n$f TEXT NULL DEFAULT NULL";
         }
 
         $sql = "CREATE TABLE $table_name (
             id INT(11) NOT NULL AUTO_INCREMENT,
-            channel VARCHAR(255), 
-            level INTEGER, 
-            message LONGTEXT, 
-            time INTEGER UNSIGNED$extraFields$additionalFields, 
+            channel VARCHAR(255),
+            level INTEGER,
+            message LONGTEXT,
+            time INTEGER UNSIGNED$extraFields$additionalFields,
             PRIMARY KEY  (id)
             ) $charset_collate;";
-             
+
 
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
 
         $this->initialized = true;
     }
+
+    public function uninitialize()
+    {
+        $table_name = $this->prefix . $this->table;
+        $sql = "DROP TABLE IF EXISTS $table_name;";
+
+        if (!is_null($this->wpdb)) {
+            $this->wpdb->query($sql);
+        }
+    }
+
     /**
      * Writes the record down to the log of the implementing handler
      *
@@ -122,23 +133,23 @@ class WordPressHandler extends AbstractProcessingHandler
             $this->initialize($record);
         }
         //'context' contains the array
-        $contentArray = array_merge(array(            
+        $contentArray = array_merge(array(
             'channel' => $record['channel'],
             'level' => $record['level'],
             'message' => $record['message'],
             'time' => $record['datetime']->format('U')
         ), $record['context']);
-        
+
         $recordExtra = (isset($record['formatted']['extra'])) ? $record['formatted']['extra'] : $record['extra'];
-        	
+
         array_walk($recordExtra, function(&$value, $key) {
         	if(is_array($value) || $value instanceof \Traversable) {
         		$value = json_encode($value);
         	}
         });
-        
+
         $contentArray = $contentArray + $recordExtra;
-        
+
         if(count($this->additionalFields) > 0) {
 	        //Fill content array with "null" values if not provided
 	        $contentArray = $contentArray + array_combine(
