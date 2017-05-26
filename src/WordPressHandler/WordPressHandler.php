@@ -68,6 +68,15 @@ class WordPressHandler extends AbstractProcessingHandler
         parent::__construct($level, $bubble);
     }
     /**
+     * Returns the full log tables name
+     *
+     * @return string
+     */
+    public function get_table_name()
+    {
+        return $this->prefix . $this->table;
+    }
+    /**
      * Initializes this handler by creating the table if it not exists
      */
     public function initialize(array $record)
@@ -83,7 +92,7 @@ class WordPressHandler extends AbstractProcessingHandler
 
         $charset_collate = $this->wpdb->get_charset_collate();
 
-        $table_name = $this->prefix . $this->table;
+        $table_name = $this->get_table_name();
 
         $extraFields = '';
         foreach ($record['extra'] as $key => $val) {
@@ -110,17 +119,18 @@ class WordPressHandler extends AbstractProcessingHandler
 
         $this->initialized = true;
     }
-
+    /**
+     * Uninitializes this handler by deleting the table if it exists
+     */
     public function uninitialize()
     {
-        $table_name = $this->prefix . $this->table;
+        $table_name = $this->get_table_name();
         $sql = "DROP TABLE IF EXISTS $table_name;";
 
         if (!is_null($this->wpdb)) {
             $this->wpdb->query($sql);
         }
     }
-
     /**
      * Writes the record down to the log of the implementing handler
      *
@@ -158,7 +168,7 @@ class WordPressHandler extends AbstractProcessingHandler
 	        );
         }
 
-        $table_name = $this->prefix . $this->table;
+        $table_name = $this->get_table_name();
 
         $this->wpdb->insert( $table_name, $contentArray );
 
