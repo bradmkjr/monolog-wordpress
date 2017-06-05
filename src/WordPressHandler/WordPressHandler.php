@@ -35,6 +35,10 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     private $prefix = 'wp_';
     /**
+     * @var string the full table name
+     */
+    private $fullTableName = 'wp_logs';
+    /**
      * @var string[] additional fields to be stored in the database
      *
      * For each field $field, an additional context field with the name $field
@@ -63,9 +67,17 @@ class WordPressHandler extends AbstractProcessingHandler
         }
         $this->table = $table;
         $this->prefix = $this->wpdb->prefix;
+        $this->fullTableName = $this->prefix . $this->table;
 
         $this->additionalFields = $additionalFields;
         parent::__construct($level, $bubble);
+    }
+    /**
+     * Sets the full log tables name
+     */
+    public function set_table_name($name)
+    {
+        $this->fullTableName = $name;
     }
     /**
      * Returns the full log tables name
@@ -74,7 +86,7 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     public function get_table_name()
     {
-        return $this->prefix . $this->table;
+        return $this->fullTableName;
     }
     /**
      * Initializes this handler by creating the table if it not exists
@@ -157,19 +169,19 @@ class WordPressHandler extends AbstractProcessingHandler
 
         // json encode values as needed
         array_walk($recordExtra, function(&$value, $key) {
-        	if(is_array($value) || $value instanceof \Traversable) {
-        		$value = json_encode($value);
-        	}
+            if(is_array($value) || $value instanceof \Traversable) {
+                $value = json_encode($value);
+            }
         });
 
         $contentArray = $contentArray + $recordExtra;
 
         if(count($this->additionalFields) > 0) {
-	        //Fill content array with "null" values if not provided
-	        $contentArray = $contentArray + array_combine(
-	            $this->additionalFields,
-	            array_fill(0, count($this->additionalFields), null)
-	        );
+            //Fill content array with "null" values if not provided
+            $contentArray = $contentArray + array_combine(
+                $this->additionalFields,
+                array_fill(0, count($this->additionalFields), null)
+            );
         }
 
         $table_name = $this->get_table_name();
