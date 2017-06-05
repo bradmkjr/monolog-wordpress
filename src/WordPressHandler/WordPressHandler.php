@@ -67,7 +67,7 @@ class WordPressHandler extends AbstractProcessingHandler
         }
         $this->table = $table;
         $this->prefix = $this->wpdb->prefix;
-        $this->fullTableName = $this->prefix . $this->table;
+        $this->set_table_name($this->prefix.$this->table);
 
         $this->additionalFields = $additionalFields;
         parent::__construct($level, $bubble);
@@ -123,7 +123,9 @@ class WordPressHandler extends AbstractProcessingHandler
             channel VARCHAR(255),
             level INTEGER,
             message LONGTEXT,
-            time INTEGER UNSIGNED$extraFields$additionalFields,
+            time INTEGER UNSIGNED
+            $extraFields
+            $additionalFields,
             PRIMARY KEY  (id)
             ) $charset_collate;";
 
