@@ -19,7 +19,7 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     public $initialized = false;
     /**
-     * @var WPDB wpdb object of database connection
+     * @var \wpdb wpdb object of database connection
      */
     protected $wpdb;
     /**
@@ -29,11 +29,7 @@ class WordPressHandler extends AbstractProcessingHandler
     /**
      * @var string the table to store the logs in
      */
-    private $table = 'logs';
-    /**
-     * @var string the table prefix to store the logs in
-     */
-    private $prefix = 'wp_';
+    private $table = 'wp_logs';
     /**
      * @var string[] additional fields to be stored in the database
      *
@@ -45,24 +41,21 @@ class WordPressHandler extends AbstractProcessingHandler
     /**
      * Constructor of this class, sets the PDO and calls parent constructor
      *
-     * @param PDO $wpdb                  PDO Connector for the database
+     * @param \wpdb $wpdb               WPDB Connector for the database
      * @param bool $table               Table in the database to store the logs in
      * @param array $additionalFields   Additional Context Parameters to store in database
      * @param bool|int $level           Debug level which this handler should store
      * @param bool $bubble
      */
     public function __construct(
-        $wpdb = null,
+        \wpdb $wpdb,
         $table,
         $additionalFields = array(),
         $level = Logger::DEBUG,
         $bubble = true
     ) {
-        if (!is_null($wpdb)) {
-            $this->wpdb = $wpdb;
-        }
-        $this->table = $table;
-        $this->prefix = $this->wpdb->prefix;
+        $this->wpdb = $wpdb;
+        $this->table = $this->wpdb->prefix.$table;
 
         $this->additionalFields = $additionalFields;
         parent::__construct($level, $bubble);
@@ -74,7 +67,7 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     public function get_table_name()
     {
-        return $this->prefix . $this->table;
+        return apply_filters('monologwordpress_table_name', $this->table);
     }
     /**
      * Initializes this handler by creating the table if it not exists
@@ -84,11 +77,6 @@ class WordPressHandler extends AbstractProcessingHandler
 
         // referenced
         // https://codex.wordpress.org/Creating_Tables_with_Plugins
-
-        // $this->wpdb->exec(
-        //     'CREATE TABLE IF NOT EXISTS `'.$this->table.'` '
-        //     .'(channel VARCHAR(255), level INTEGER, message LONGTEXT, time INTEGER UNSIGNED)'
-        // );
 
         $charset_collate = $this->wpdb->get_charset_collate();
 
@@ -111,7 +99,9 @@ class WordPressHandler extends AbstractProcessingHandler
             channel VARCHAR(255),
             level INTEGER,
             message LONGTEXT,
-            time INTEGER UNSIGNED$extraFields$additionalFields,
+            time INTEGER UNSIGNED
+            $extraFields
+            $additionalFields,
             PRIMARY KEY  (id)
             ) $charset_collate;";
 
@@ -128,10 +118,7 @@ class WordPressHandler extends AbstractProcessingHandler
     {
         $table_name = $this->get_table_name();
         $sql = "DROP TABLE IF EXISTS $table_name;";
-
-        if (!is_null($this->wpdb)) {
-            $this->wpdb->query($sql);
-        }
+        $this->wpdb->query($sql);
     }
     /**
      * Writes the record down to the log of the implementing handler
@@ -157,24 +144,23 @@ class WordPressHandler extends AbstractProcessingHandler
 
         // json encode values as needed
         array_walk($recordExtra, function(&$value, $key) {
-        	if(is_array($value) || $value instanceof \Traversable) {
-        		$value = json_encode($value);
-        	}
+            if(is_array($value) || $value instanceof \Traversable) {
+                $value = json_encode($value);
+            }
         });
 
         $contentArray = $contentArray + $recordExtra;
 
         if(count($this->additionalFields) > 0) {
-	        //Fill content array with "null" values if not provided
-	        $contentArray = $contentArray + array_combine(
-	            $this->additionalFields,
-	            array_fill(0, count($this->additionalFields), null)
-	        );
+            //Fill content array with "null" values if not provided
+            $contentArray = $contentArray + array_combine(
+                $this->additionalFields,
+                array_fill(0, count($this->additionalFields), null)
+            );
         }
 
         $table_name = $this->get_table_name();
 
         $this->wpdb->insert( $table_name, $contentArray );
-
     }
 }
