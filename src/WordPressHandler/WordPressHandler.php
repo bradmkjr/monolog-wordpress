@@ -96,14 +96,26 @@ class WordPressHandler extends AbstractProcessingHandler
 
         // allow for Extra fields
         $extraFields = '';
-        foreach ($record['extra'] as $key => $val) {
-            $extraFields.=",\n$key TEXT NULL DEFAULT NULL";
+        foreach ($record['extra'] as $ef) {
+            if( isset($ef['name']) ){
+				if( isset($ef['type']) ){
+					$extraFields.=",\n{$ef['name']} {$ef['type']}";
+				}else{
+					$extraFields.=",\n{$ef['name']} TEXT NULL DEFAULT NULL";
+				}
+			}
         }
 
         // additional fields
         $additionalFields = '';
-        foreach ($this->additionalFields as $f) {
-            $additionalFields.=",\n$f TEXT NULL DEFAULT NULL";
+        foreach ($this->additionalFields as $af) {
+            if( isset($af['name']) ){
+				if( isset($af['type']) ){
+					$additionalFields.=",\n{$af['name']} {$af['type']}";
+				}else{
+					$additionalFields.=",\n{$af['name']} TEXT NULL DEFAULT NULL";
+				}
+			}
         }
 
         $sql = "CREATE TABLE $table_name (
