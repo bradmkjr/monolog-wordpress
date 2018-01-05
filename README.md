@@ -39,10 +39,10 @@ use WordPressHandler\WordPressHandler;
 global $wpdb;
 
 //Create WordPressHandler
-$wordPressHandler = new WordPressHandler($wpdb, "log", array('username', 'userid'), \Monolog\Logger::DEBUG);
+$wordPressHandler = new WordPressHandler($wpdb, "log", array(array('name' => 'username','type' => 'VARCHAR(255) DEFAULT NULL'), array('name' => 'userid','type' => 'VARCHAR(255) DEFAULT NULL')), \Monolog\Logger::DEBUG);
 
 // setup array of extra fields
-$record = ['extra' => []];
+$record = ['extra' => ['extra_field' => 'userid','type' => 'VARCHAR(255) DEFAULT NULL']];
 
 // creates database table if needed, add extra fields from above
 $wordPressHandler->initialize($record);
@@ -68,12 +68,21 @@ function register_activation_hook(__FILE__, function() {
 
     $handler = new \WordPressHandler\WordPressHandler(
         $wpdb, "logs",
-        array('username', 'userid'),
+        array(
+            array(
+                'name' => 'username',
+                'type' => 'VARCHAR(255) DEFAULT NULL'
+            ),
+            array(
+                'name' => 'userid',
+                'type' => 'VARCHAR(255) DEFAULT NULL'
+            )
+        ),
         \Monolog\Logger::DEBUG
     );
 
     // setup array of extra fields
-    $record = ['extra' => []];
+    $record = ['extra' => ['extra_field' => 'userid','type' => 'VARCHAR(255) DEFAULT NULL']];
 
     // creates database table if needed, add extra fields from above
     $handler->initialize($record);
