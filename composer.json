@@ -4,7 +4,7 @@
     "keywords": ["wordpress", "log", "logging", "monolog", "mysql", "database"],
     "homepage": "https://github.com/bradmkjr/monolog-wordpress",
     "license": "MIT",
-    "version": "1.6.2",
+    "version": "1.6.3",
     "authors": [
         {
             "name": "Bradford Knowlton",
