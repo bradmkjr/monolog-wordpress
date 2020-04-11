@@ -19,7 +19,7 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     public $initialized = false;
     /**
-     * @var WPDB wpdb object of database connection
+     * @var \wpdb wpdb object of database connection
      */
     protected $wpdb;
     /**
@@ -45,7 +45,7 @@ class WordPressHandler extends AbstractProcessingHandler
     /**
      * Constructor of this class, sets the PDO and calls parent constructor
      *
-     * @param PDO $wpdb                  PDO Connector for the database
+     * @param \wpdb $wpdb               wpdb object of database connection
      * @param bool $table               Table in the database to store the logs in
      * @param array $additionalFields   Additional Context Parameters to store in database
      * @param bool|int $level           Debug level which this handler should store
@@ -139,7 +139,7 @@ class WordPressHandler extends AbstractProcessingHandler
      * @param  $record[]
      * @return void
      */
-    protected function write(array $record): void
+    protected function write(array $record)
     {
         if (!$this->initialized) {
             $this->initialize($record);
