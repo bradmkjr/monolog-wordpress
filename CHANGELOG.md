@@ -5,7 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Fixes for context and other data handling
+
+## [1.6.5] - 2020-04-11
+### Fixed
+- Limitations of WordPressHandler regarding formatters, whereas formatted data was only respected in the 'extra' part of the records, but not for 'message' or 'context' (https://github.com/bradmkjr/monolog-wordpress/issues/11). **Note:** the time column still does not follow the formatted datetime to keep compatibility with existing deployments.
 
 ## [1.6.4] - 2020-04-11
 ### Fixed
@@ -39,7 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 No changelog had been maintained up to this point. Refer to the GIT commit history for more details.
 
 
-[Unreleased]: https://github.com/bradmkjr/monolog-wordpress/compare/1.6.4...v1
+[Unreleased]: https://github.com/bradmkjr/monolog-wordpress/compare/1.6.5...v1
+[1.6.5]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.5
 [1.6.4]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.4
 [1.6.3]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.3
 [1.6.2]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.2
