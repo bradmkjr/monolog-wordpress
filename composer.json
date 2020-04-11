@@ -4,7 +4,7 @@
     "keywords": ["wordpress", "log", "logging", "monolog", "mysql", "database"],
     "homepage": "https://github.com/bradmkjr/monolog-wordpress",
     "license": "MIT",
-    "version": "1.6.4",
+    "version": "2.0.0",
     "authors": [
         {
             "name": "Bradford Knowlton",
@@ -22,8 +22,8 @@
         }
     ],
     "require": {
-        "php": ">=5.3.0",
-        "monolog/monolog": "^1.4.0"
+        "php": ">=7.1.0",
+        "monolog/monolog": "^2.0.0"
     },
     "require-dev": {
         "wordpress/wordpress": "4 - 5",

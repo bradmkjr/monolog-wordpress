@@ -139,7 +139,7 @@ class WordPressHandler extends AbstractProcessingHandler
      * @param  $record[]
      * @return void
      */
-    protected function write(array $record)
+    protected function write(array $record): void
     {
         if (!$this->initialized) {
             $this->initialize($record);
