@@ -15,7 +15,7 @@ This is a very simple handler for monolog. This version works for custom plugin 
 monolog-wordpress is available via composer. Just add the following line to your required section in composer.json and do a `php composer.phar update`.
 
 ```
-"bradmkjr/monolog-wordpress": ">1.6.2"
+"bradmkjr/monolog-wordpress": ">1.6.3"
 ```
 
 # Usage
