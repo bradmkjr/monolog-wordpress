@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased v2]
 
+## [2.1.0] - 2020-10-15
+### Added
+- Feature to limit the maximum number of rows to keep in the log table. Use `set_max_table_rows()` method on the handler instance to configure the limit.
+
 ## [2.0.1] - 2020-10-15
 ### Fixed
 - Limitations of WordPressHandler regarding formatters, whereas formatted data was only respected in the 'extra' part of the records, but not for 'message' or 'context' (https://github.com/bradmkjr/monolog-wordpress/issues/11). **Note:** the time column still does not follow the formatted datetime to keep compatibility with existing deployments.
@@ -50,7 +54,8 @@ V1 is continued to be updated for continued support for Monolog v1 and PHP versi
 No changelog had been maintained up to this point. Refer to the GIT commit history for more details.
 
 
-[Unreleased v2]: https://github.com/bradmkjr/monolog-wordpress/compare/2.0.1...HEAD
+[Unreleased v2]: https://github.com/bradmkjr/monolog-wordpress/compare/2.1.0...HEAD
+[2.1.0]: https://github.com/bradmkjr/monolog-wordpress/tree/2.1.0
 [2.0.1]: https://github.com/bradmkjr/monolog-wordpress/tree/2.0.1
 [2.0.0]: https://github.com/bradmkjr/monolog-wordpress/tree/2.0.0
 [v1 changes after v2 release]: https://github.com/bradmkjr/monolog-wordpress/compare/1.6.4...v2
