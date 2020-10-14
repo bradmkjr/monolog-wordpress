@@ -42,6 +42,10 @@ class WordPressHandler extends AbstractProcessingHandler
      * as the values are stored in the column name $field.
      */
     private $additionalFields = array();
+	/**
+	 * @var int defines the maximum number of rows allowed in the log table. 0 means no limit
+	 */
+    protected $max_table_rows = 0;
     /**
      * Constructor of this class, sets the PDO and calls parent constructor
      *
@@ -67,6 +71,18 @@ class WordPressHandler extends AbstractProcessingHandler
         $this->additionalFields = $additionalFields;
         parent::__construct($level, $bubble);
     }
+	/**
+	 * Set the limit of maximum number of table rows to collect.
+	 * Use 0 (or any negative number) to disable limit.
+	 *
+	 * @param int $max_table_rows
+	 */
+	public function set_max_table_rows( $max_table_rows ) {
+		if ( ! is_int( $max_table_rows ) ) {
+			throw new \InvalidArgumentException('Maximum number of table rows must be an integer.');
+		}
+		$this->max_table_rows = max( 0, $max_table_rows );
+	}
     /**
      * Returns the full log tables name
      *
@@ -133,6 +149,32 @@ class WordPressHandler extends AbstractProcessingHandler
             $this->wpdb->query($sql);
         }
     }
+	/**
+	 * Deletes the oldest records from the log table to ensure there are no more
+	 * rows than the defined limit.
+	 *
+	 * Use {@see set_max_table_rows()} to configure the limit!
+	 *
+	 * @return boolean True if rows were deleted, false otherwise.
+	 */
+    public function maybe_truncate() {
+    	if ( $this->max_table_rows <= 0 ) {
+    		return false;
+	    }
+    	
+	    $table_name = $this->get_table_name();
+    	
+        $sql = "SELECT count(*) FROM {$table_name};";
+	    $count = $this->wpdb->get_var($sql);
+	    
+	    if ( is_numeric( $count ) && $this->max_table_rows <= (int) $count ) {
+		    // using `LIMIT -1`, `LIMIT 0`, `LIMIT NULL` may not be compatible with all db systems
+		    // deleting 10000 rows in one go is good enough anyway, it'll converge pretty fast
+	    	$sql = "DELETE FROM {$table_name} WHERE `id` IN (SELECT `id` FROM {$table_name} ORDER BY `id` DESC LIMIT 10000 OFFSET {$this->max_table_rows});";
+	    	return false !== $this->wpdb->query($sql);
+	    }
+	    return false;
+    }
     /**
      * Writes the record down to the log of the implementing handler
      *
@@ -178,6 +220,6 @@ class WordPressHandler extends AbstractProcessingHandler
         $table_name = $this->get_table_name();
 
         $this->wpdb->insert( $table_name, $contentArray );
-
+	    $this->maybe_truncate();
     }
 }
