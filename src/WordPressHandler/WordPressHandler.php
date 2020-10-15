@@ -170,7 +170,7 @@ class WordPressHandler extends AbstractProcessingHandler
 	    if ( is_numeric( $count ) && $this->max_table_rows <= (int) $count ) {
 		    // using `LIMIT -1`, `LIMIT 0`, `LIMIT NULL` may not be compatible with all db systems
 		    // deleting 10000 rows in one go is good enough anyway, it'll converge pretty fast
-	    	$sql = "DELETE FROM {$table_name} WHERE `id` IN (SELECT `id` FROM {$table_name} ORDER BY `id` DESC LIMIT 10000 OFFSET {$this->max_table_rows});";
+	    	$sql = "DELETE FROM {$table_name} WHERE `id` IN ( SELECT * FROM (SELECT `id` FROM {$table_name} ORDER BY `id` DESC LIMIT 10000 OFFSET {$this->max_table_rows}) as `workaround_subquery_for_older_mysql_versions` );";
 	    	return false !== $this->wpdb->query($sql);
 	    }
 	    return false;
