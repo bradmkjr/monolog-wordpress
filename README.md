@@ -2,7 +2,7 @@ monolog-wordpress
 =============
 
 WordPress Handler for Monolog, which allows to store log messages in a MySQL Table.
-It can log text messages to a specific table, and creates the table automatically if it does not exist.
+It can log text messages to a specific table, and create the table automatically if it does not exist.
 The class further allows to dynamically add extra attributes, which are stored in a separate database field, and can be used for later analyzing and sorting.
 
 Original based on:
@@ -17,6 +17,13 @@ monolog-wordpress is available via composer. Just add the following line to your
 ```
 "bradmkjr/monolog-wordpress": "^2.1.0"
 ```
+
+# Versions
+Since Monolog v2 broke compatibility with PHP versions before v7.1 some may want to keep using Monolog v1. **monolog-wordpress** is therefore offered in two major versions:
+* [v1](https://github.com/bradmkjr/monolog-wordpress/tree/v1) - compatible with Monolog v1 and PHP v5.3 or later.
+* [v2](https://github.com/bradmkjr/monolog-wordpress/tree/master) - compatible with Monolog v2 and PHP v7.1 or later.
+
+Apart from the compatibility differences stated above the features of v1 and v2 are going to be kept the same as much as possible.
 
 # Usage
 Just use it as any other Monolog Handler, push it to the stack of your Monolog Logger instance. The Handler however needs some parameters:
