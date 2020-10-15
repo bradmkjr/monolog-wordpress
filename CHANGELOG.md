@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Feature to limit the maximum number of rows to keep in the log table. Use `set_max_table_rows()` method on the handler instance to configure the limit.
 
+### Improved
+- README.md now has a section about v2 and v1 differences.
+
 ## [1.6.5] - 2020-04-11
 ### Fixed
 - Limitations of WordPressHandler regarding formatters, whereas formatted data was only respected in the 'extra' part of the records, but not for 'message' or 'context' (https://github.com/bradmkjr/monolog-wordpress/issues/11). **Note:** the time column still does not follow the formatted datetime to keep compatibility with existing deployments.
