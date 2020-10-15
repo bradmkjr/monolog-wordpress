@@ -145,24 +145,27 @@ class WordPressHandler extends AbstractProcessingHandler
             $this->initialize($record);
         }
         //'context' contains the array
-        $contentArray = array_merge(array(
+        $contentArray = array(
             'channel' => $record['channel'],
             'level' => $record['level'],
-            'message' => $record['message'],
+            'message' => (isset($record['formatted']['message'])) ? $record['formatted']['message'] : $record['message'],
             'time' => $record['datetime']->format('U')
-        ), $record['context']);
+        );
 
-        // extra out formatted or unformatted extra values
+        // Make sure to use the formatted values for context and extra, if available
         $recordExtra = (isset($record['formatted']['extra'])) ? $record['formatted']['extra'] : $record['extra'];
+        $recordContext = (isset($record['formatted']['context'])) ? $record['formatted']['context'] : $record['context'];
+    
+        $recordContExtra = array_merge( $recordExtra, $recordContext );
 
         // json encode values as needed
-        array_walk($recordExtra, function(&$value, $key) {
+        array_walk($recordContExtra, function(&$value, $key) {
         	if(is_array($value) || $value instanceof \Traversable) {
         		$value = json_encode($value);
         	}
         });
 
-        $contentArray = $contentArray + $recordExtra;
+        $contentArray = $contentArray + $recordContExtra;
 
         if(count($this->additionalFields) > 0) {
 	        //Fill content array with "null" values if not provided

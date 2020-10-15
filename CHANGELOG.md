@@ -6,14 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased v2]
 
+## [2.0.1] - 2020-10-15
+### Fixed
+- Limitations of WordPressHandler regarding formatters, whereas formatted data was only respected in the 'extra' part of the records, but not for 'message' or 'context' (https://github.com/bradmkjr/monolog-wordpress/issues/11). **Note:** the time column still does not follow the formatted datetime to keep compatibility with existing deployments.
+
 ## [2.0.0] - 2020-04-11 
 ### Changed
 - This package now requires Monolog v2 or later
 - Minimum required PHP version is 7.1 because of the same constraint in Monolog v2
 
-
-## [Unreleased v1]
-
+## [v1 changes after v2 release]
+V1 is continued to be updated for continued support for Monolog v1 and PHP versions <7.1. Meaningful changes are going to be applied to both V1 and master branches. Changes made to the V1 branch however not going to be listed here between v1.6.4 and v2.0.0. For those changes please refer to the Changelog of the V1 branch.
 
 ## [1.6.4] - 2020-04-11
 ### Fixed
@@ -47,9 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 No changelog had been maintained up to this point. Refer to the GIT commit history for more details.
 
 
-[Unreleased v2]: https://github.com/bradmkjr/monolog-wordpress/compare/2.0.0...HEAD
+[Unreleased v2]: https://github.com/bradmkjr/monolog-wordpress/compare/2.0.1...HEAD
+[2.0.1]: https://github.com/bradmkjr/monolog-wordpress/tree/2.0.1
 [2.0.0]: https://github.com/bradmkjr/monolog-wordpress/tree/2.0.0
-[Unreleased v1]: https://github.com/bradmkjr/monolog-wordpress/compare/1.6.4...v1
+[v1 changes after v2 release]: https://github.com/bradmkjr/monolog-wordpress/compare/1.6.4...v2
 [1.6.4]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.4
 [1.6.3]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.3
 [1.6.2]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.2
