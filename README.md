@@ -2,7 +2,7 @@ monolog-wordpress
 =============
 
 WordPress Handler for Monolog, which allows to store log messages in a MySQL Table.
-It can log text messages to a specific table, and creates the table automatically if it does not exist.
+It can log text messages to a specific table, and create the table automatically if it does not exist.
 The class further allows to dynamically add extra attributes, which are stored in a separate database field, and can be used for later analyzing and sorting.
 
 Original based on:
@@ -15,8 +15,15 @@ This is a very simple handler for monolog. This version works for custom plugin 
 monolog-wordpress is available via composer. Just add the following line to your required section in composer.json and do a `php composer.phar update` or your choice of composer update method.
 
 ```
-"bradmkjr/monolog-wordpress": "^2.0.0"
+"bradmkjr/monolog-wordpress": "^2.1.0"
 ```
+
+# Versions
+Since Monolog v2 broke compatibility with PHP versions before v7.1 some may want to keep using Monolog v1. **monolog-wordpress** is therefore offered in two major versions:
+* [v1](https://github.com/bradmkjr/monolog-wordpress/tree/v1) - compatible with Monolog v1 and PHP v5.3 or later.
+* [v2](https://github.com/bradmkjr/monolog-wordpress/tree/master) - compatible with Monolog v2 and PHP v7.1 or later.
+
+Apart from the compatibility differences stated above the features of v1 and v2 are going to be kept the same as much as possible.
 
 # Usage
 Just use it as any other Monolog Handler, push it to the stack of your Monolog Logger instance. The Handler however needs some parameters:
@@ -31,33 +38,36 @@ Just use it as any other Monolog Handler, push it to the stack of your Monolog L
 Given that $wpdb is your database instance, you could use the class as follows:
 
 ```php
-//Import class
+// Import class
 use WordPressHandler\WordPressHandler;
 
-//ensure access to global $wpdb
-
+// Ensure access to global $wpdb
 global $wpdb;
 
-//Create WordPressHandler
+// Create WordPressHandler
 $wordPressHandler = new WordPressHandler($wpdb, "log", array('username', 'userid'), \Monolog\Logger::DEBUG);
 
-// setup array of extra fields
+// Configure maximum number of rows to keep (old entries are deleted when reached)
+$wordPressHandler->set_max_table_rows( 250000 );
+
+// Setup array of extra fields
 $record = ['extra' => []];
 
-// creates database table if needed, add extra fields from above
+// Create database table if needed, add extra fields from above
 $wordPressHandler->initialize($record);
 
+// Create Logger
 $context = 'channel-name';
-
-//Create logger
 $logger = new \Monolog\Logger($context);
+
+// Add WordPressHandler as the Handler for the Logger
 $logger->pushHandler($wordPressHandler);
 
-//Now you can use the logger, and further attach additional information
+// Now you can use the logger, and further attach additional information
 $logger->addWarning("This is a great message, woohoo!", array('username'  => 'John Doe', 'userid'  => 245));
 ```
 
-Required code to setup tables on plugin activation:
+Required code to set up tables on plugin activation:
 
 ```php
 require __DIR__.'/vendor/autoload.php';
@@ -115,29 +125,27 @@ Example to use in your custom WordPress Plugin
 
 ```php
 add_action( 'plugins_loaded', 'demo_function' );
-
 function demo_function(){
-
-require __DIR__ . '/vendor/autoload.php';
-
-//Import class
-use WordPressHandler\WordPressHandler;
-
-//ensure access to global $wpdb
-global $wpdb;
-
-//Create WordPressHandler
-$wordPressHandler = new WordPressHandler($wpdb, "log", array('app', 'version'), \Monolog\Logger::DEBUG);
-
-$context = 'test-plugin-logging';
-
-//Create logger
-$logger = new \Monolog\Logger($context);
-$logger->pushHandler($wordPressHandler);
-
-//Now you can use the logger, and further attach additional information
-$logger->addWarning("This is a great message, woohoo!", array('app'  => 'Test Plugin', 'version'  => '2.4.5'));
-
+    require __DIR__ . '/vendor/autoload.php';
+    
+    // Import class
+    use WordPressHandler\WordPressHandler;
+    
+    // Ensure access to global $wpdb
+    global $wpdb;
+    
+    // Create WordPressHandler
+    $wordPressHandler = new WordPressHandler($wpdb, "log", array('app', 'version'), \Monolog\Logger::DEBUG);
+    
+    // Create logger
+    $context = 'test-plugin-logging';
+    $logger = new \Monolog\Logger($context);
+    
+    // Add WordPressHandler as the Handler for the Logger
+    $logger->pushHandler($wordPressHandler);
+    
+    // Now you can use the logger, and further attach additional information
+    $logger->addWarning("This is a great message, woohoo!", array('app'  => 'Test Plugin', 'version'  => '2.4.5'));
 }
 ```
 
