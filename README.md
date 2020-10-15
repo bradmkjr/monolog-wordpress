@@ -12,10 +12,10 @@ Homepage: http://www.d-herrmann.de/projects/monolog-mysql-handler/
 This is a very simple handler for monolog. This version works for custom plugin development, but I would not advise to distrubte this code in a public repository for general use on high traffic sites. You have been warned.
 
 # Installation
-monolog-wordpress is available via composer. Just add the following line to your required section in composer.json and do a `php composer.phar update`.
+monolog-wordpress is available via composer. Just add the following line to your required section in composer.json and do a `php composer.phar update` or your choice of composer update method.
 
 ```
-"bradmkjr/monolog-wordpress": ">1.6.3"
+"bradmkjr/monolog-wordpress": "^1.6.4"
 ```
 
 # Usage
