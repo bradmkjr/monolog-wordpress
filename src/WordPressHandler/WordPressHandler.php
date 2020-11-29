@@ -104,6 +104,8 @@ class WordPressHandler extends AbstractProcessingHandler
      *
      * @param int      $max_table_rows      The max number of rows to accumulate.
      *                                      Use 0 (or any negative number) to disable limit.
+     *
+     * @deprecated Use {@see conf_table_size_limiter()} instead.
      */
     public function set_max_table_rows( int $max_table_rows ) {
         $this->conf_table_size_limiter( $max_table_rows );
