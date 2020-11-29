@@ -1,9 +1,8 @@
 <?php
 namespace WordPressHandler;
+
 use Monolog\Logger;
 use Monolog\Handler\AbstractProcessingHandler;
-// use PDO;
-// use PDOStatement;
 
 /**
  * This class is a handler for Monolog, which can be used
@@ -22,10 +21,6 @@ class WordPressHandler extends AbstractProcessingHandler
      * @var \wpdb wpdb object of database connection
      */
     protected $wpdb;
-    /**
-     * @var PDOStatement statement to insert a new record
-     */
-    // private $statement;
     /**
      * @var string the table to store the logs in
      */
@@ -52,23 +47,49 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     protected $truncate_batch_size = 1;
     /**
-     * Constructor of this class, sets the PDO and calls parent constructor
+     * Constructor of this class, sets own fields and calls parent constructor
      *
-     * @param \wpdb $wpdb               wpdb object of database connection
-     * @param bool $table               Table in the database to store the logs in
-     * @param array $additionalFields   Additional Context Parameters to store in database
-     * @param bool|int $level           Debug level which this handler should store
-     * @param bool $bubble
+     * @param \wpdb|null $custom_wpdb      The {@see \wpdb} object of database connection.
+     *                                     Set to `null` to automatically use the global $wpdb of WordPress.
+     *                                     Default: null
+     * @param string     $table            Name of the table in the database to store the logs in.
+     *                                     The 'wp_' (or other configured) prefix will be added automatically.
+     *                                     Default: 'logs'
+     * @param string[]   $additionalFields Additional Context Parameters to store in database
+     *                                     Default: empty array i.e. no additional fields
+     * @param int|string $level            The minimum logging level at which this handler will be triggered.
+     *                                     Default: {@see Logger::DEBUG}
+     * @param bool       $bubble           Whether the messages that are handled can bubble up the stack or not.
+     *                                     Default: true
      */
     public function __construct(
-        $wpdb = null,
-        $table,
+        $custom_wpdb = null,
+        $table = 'logs',
         $additionalFields = array(),
         $level = Logger::DEBUG,
         $bubble = true
     ) {
-        if (!is_null($wpdb)) {
-            $this->wpdb = $wpdb;
+        if ( ! is_null($custom_wpdb) ) {
+            if (  ( $custom_wpdb instanceof \wpdb ) ) {
+                $this->wpdb = $custom_wpdb;
+            }
+            else {
+                throw new \InvalidArgumentException('$custom_wpdb must be an instance of the Wordpress wpdb class.', 1606644510);
+            }
+        }
+        else {
+            global $wpdb;
+            if ( isset($wpdb) ) {
+                if (  ( $wpdb instanceof \wpdb ) ) {
+                    $this->wpdb = $wpdb;
+                }
+                else {
+                    throw new \RuntimeException('The global $wpdb is not an instance of the Wordpress wpdb class.', 1606644515);
+                }
+            }
+            else {
+                throw new \RuntimeException('$custom_wpdb is not provided and global $wpdb is not available.', 1606644520);
+            }
         }
         $this->table = $table;
         $this->prefix = $this->wpdb->prefix;
@@ -236,24 +257,24 @@ class WordPressHandler extends AbstractProcessingHandler
 
         // json encode values as needed
         array_walk($recordContExtra, function(&$value, $key) {
-        	if(is_array($value) || $value instanceof \Traversable) {
-        		$value = json_encode($value);
-        	}
+            if(is_array($value) || $value instanceof \Traversable) {
+                $value = json_encode($value);
+            }
         });
 
         $contentArray = $contentArray + $recordContExtra;
 
         if(count($this->additionalFields) > 0) {
-	        //Fill content array with "null" values if not provided
-	        $contentArray = $contentArray + array_combine(
-	            $this->additionalFields,
-	            array_fill(0, count($this->additionalFields), null)
-	        );
+            //Fill content array with "null" values if not provided
+            $contentArray = $contentArray + array_combine(
+                $this->additionalFields,
+                array_fill(0, count($this->additionalFields), null)
+            );
         }
 
         $table_name = $this->get_table_name();
 
         $this->wpdb->insert( $table_name, $contentArray );
-	    $this->maybe_truncate();
+        $this->maybe_truncate();
     }
 }
