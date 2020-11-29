@@ -52,7 +52,7 @@ class WordPressHandler extends AbstractProcessingHandler
      * @param \wpdb|null $custom_wpdb      The {@see \wpdb} object of database connection.
      *                                     Set to `null` to automatically use the global $wpdb of WordPress.
      *                                     Default: null
-     * @param string     $table            Name of the table in the database to store the logs in.
+     * @param string     $table            Name of the database table to store the logs in.
      *                                     The 'wp_' (or other configured) prefix will be added automatically.
      *                                     Default: 'logs'
      * @param string[]   $additionalFields Additional Context Parameters to store in database

@@ -75,7 +75,7 @@ No changelog had been maintained up to this point. Refer to the GIT commit histo
 [2.1.0]: https://github.com/bradmkjr/monolog-wordpress/tree/2.1.0
 [2.0.1]: https://github.com/bradmkjr/monolog-wordpress/tree/2.0.1
 [2.0.0]: https://github.com/bradmkjr/monolog-wordpress/tree/2.0.0
-[v1 changes after v2 release]: https://github.com/bradmkjr/monolog-wordpress/compare/1.6.4...v2
+[v1 changes after v2 release]: https://github.com/bradmkjr/monolog-wordpress/compare/1.6.4...v1
 [1.6.4]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.4
 [1.6.3]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.3
 [1.6.2]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.2
