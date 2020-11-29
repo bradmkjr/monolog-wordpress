@@ -1,9 +1,8 @@
 <?php
 namespace WordPressHandler;
+
 use Monolog\Logger;
 use Monolog\Handler\AbstractProcessingHandler;
-// use PDO;
-// use PDOStatement;
 
 /**
  * This class is a handler for Monolog, which can be used
@@ -23,10 +22,6 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     protected $wpdb;
     /**
-     * @var PDOStatement statement to insert a new record
-     */
-    // private $statement;
-    /**
      * @var string the table to store the logs in
      */
     private $table = 'logs';
@@ -42,28 +37,59 @@ class WordPressHandler extends AbstractProcessingHandler
      * as the values are stored in the column name $field.
      */
     private $additionalFields = array();
-	/**
-	 * @var int defines the maximum number of rows allowed in the log table. 0 means no limit
-	 */
+    /**
+     * @var int Defines the maximum number of rows allowed in the log table. 0 means no limit
+     */
     protected $max_table_rows = 0;
     /**
-     * Constructor of this class, sets the PDO and calls parent constructor
+     * @var int Defines the number of rows deleted when limit is reached.
+     *          Do not choose a value too low, because it may generate huge database overhead!
+     */
+    protected $truncate_batch_size = 1;
+    /**
+     * Constructor of this class, sets own fields and calls parent constructor
      *
-     * @param \wpdb $wpdb               wpdb object of database connection
-     * @param bool $table               Table in the database to store the logs in
-     * @param array $additionalFields   Additional Context Parameters to store in database
-     * @param bool|int $level           Debug level which this handler should store
-     * @param bool $bubble
+     * @param \wpdb|null $custom_wpdb      The {@see \wpdb} object of database connection.
+     *                                     Set to `null` to automatically use the global $wpdb of WordPress.
+     *                                     Default: null
+     * @param string     $table            Name of the database table to store the logs in.
+     *                                     The 'wp_' (or other configured) prefix will be added automatically.
+     *                                     Default: 'logs'
+     * @param string[]   $additionalFields Additional Context Parameters to store in database
+     *                                     Default: empty array i.e. no additional fields
+     * @param int|string $level            The minimum logging level at which this handler will be triggered.
+     *                                     Default: {@see Logger::DEBUG}
+     * @param bool       $bubble           Whether the messages that are handled can bubble up the stack or not.
+     *                                     Default: true
      */
     public function __construct(
-        $wpdb = null,
-        $table,
+        $custom_wpdb = null,
+        $table = 'logs',
         $additionalFields = array(),
         $level = Logger::DEBUG,
         $bubble = true
     ) {
-        if (!is_null($wpdb)) {
-            $this->wpdb = $wpdb;
+        if ( ! is_null($custom_wpdb) ) {
+            if (  ( $custom_wpdb instanceof \wpdb ) ) {
+                $this->wpdb = $custom_wpdb;
+            }
+            else {
+                throw new \InvalidArgumentException('$custom_wpdb must be an instance of the Wordpress wpdb class.', 1606644510);
+            }
+        }
+        else {
+            global $wpdb;
+            if ( isset($wpdb) ) {
+                if (  ( $wpdb instanceof \wpdb ) ) {
+                    $this->wpdb = $wpdb;
+                }
+                else {
+                    throw new \RuntimeException('The global $wpdb is not an instance of the Wordpress wpdb class.', 1606644515);
+                }
+            }
+            else {
+                throw new \RuntimeException('$custom_wpdb is not provided and global $wpdb is not available.', 1606644520);
+            }
         }
         $this->table = $table;
         $this->prefix = $this->wpdb->prefix;
@@ -71,15 +97,40 @@ class WordPressHandler extends AbstractProcessingHandler
         $this->additionalFields = $additionalFields;
         parent::__construct($level, $bubble);
     }
-	/**
-	 * Set the limit of maximum number of table rows to collect.
-	 * Use 0 (or any negative number) to disable limit.
-	 *
-	 * @param int $max_table_rows
-	 */
-	public function set_max_table_rows( int $max_table_rows ) {
-		$this->max_table_rows = max( 0, $max_table_rows );
-	}
+    
+    /**
+     * Configure the limiter for the maximum number of table rows used to collect log entries.
+     *
+     * @param int      $max_table_rows      The max number of rows to accumulate.
+     *                                      Use 0 (or any negative number) to disable limit.
+     * @param null|int $truncate_batch_size Optional.
+     *                                      This defines the number of rows deleted when the limit is reached.
+     *                                      Once the limit is reached, rows are deleted every time this number of log
+     *                                      entries added.
+     *                                      Do not set it to a small number, because deleting rows too often can create
+     *                                      significant performance issues.
+     *                                      Recommended minimum value is between 100 and few thousands.
+     *                                      Default: set to 10% of $max_table_rows
+     */
+    public function conf_table_size_limiter( int $max_table_rows, int $truncate_batch_size = null ) {
+        $this->max_table_rows = max( 0, $max_table_rows );
+        if ( is_null( $truncate_batch_size ) ) {
+            $truncate_batch_size = (int) ( $max_table_rows / 10 );
+        }
+        $this->truncate_batch_size = max( 1, $truncate_batch_size );
+    }
+    /**
+     * Set the limit for the number of table rows used to collect log entries.
+     *
+     *
+     * @param int      $max_table_rows      The max number of rows to accumulate.
+     *                                      Use 0 (or any negative number) to disable limit.
+     *
+     * @deprecated Use {@see conf_table_size_limiter()} instead.
+     */
+    public function set_max_table_rows( int $max_table_rows ) {
+        $this->conf_table_size_limiter( $max_table_rows );
+    }
     /**
      * Returns the full log tables name
      *
@@ -146,31 +197,32 @@ class WordPressHandler extends AbstractProcessingHandler
             $this->wpdb->query($sql);
         }
     }
-	/**
-	 * Deletes the oldest records from the log table to ensure there are no more
-	 * rows than the defined limit.
-	 *
-	 * Use {@see set_max_table_rows()} to configure the limit!
-	 *
-	 * @return boolean True if rows were deleted, false otherwise.
-	 */
-    public function maybe_truncate() {
-    	if ( $this->max_table_rows <= 0 ) {
-    		return false;
-	    }
-    	
-	    $table_name = $this->get_table_name();
-    	
+    /**
+     * Deletes the oldest records from the log table to ensure there are no more
+     * rows than the defined limit.
+     *
+     * Use {@see set_max_table_rows()} to configure the limit!
+     *
+     * @return boolean True if rows were deleted, false otherwise.
+     */
+    protected function maybe_truncate() {
+        if ( $this->max_table_rows <= 0 ) {
+            return false;
+        }
+        
+        $table_name = $this->get_table_name();
+        
         $sql = "SELECT count(*) FROM {$table_name};";
-	    $count = $this->wpdb->get_var($sql);
-	    
-	    if ( is_numeric( $count ) && $this->max_table_rows <= (int) $count ) {
-		    // using `LIMIT -1`, `LIMIT 0`, `LIMIT NULL` may not be compatible with all db systems
-		    // deleting 10000 rows in one go is good enough anyway, it'll converge pretty fast
-	    	$sql = "DELETE FROM {$table_name} WHERE `id` IN ( SELECT * FROM (SELECT `id` FROM {$table_name} ORDER BY `id` DESC LIMIT 10000 OFFSET {$this->max_table_rows}) as `workaround_subquery_for_older_mysql_versions` );";
-	    	return false !== $this->wpdb->query($sql);
-	    }
-	    return false;
+        $count = $this->wpdb->get_var($sql);
+        
+        if ( is_numeric( $count ) && $this->max_table_rows <= (int) $count ) {
+            $offset = $this->max_table_rows - $this->truncate_batch_size;
+            // using `LIMIT -1`, `LIMIT 0`, `LIMIT NULL` may not be compatible with all db systems
+            // deleting 10000 rows in one go is good enough anyway, it'll converge pretty fast
+            $sql = "DELETE FROM {$table_name} WHERE `id` IN ( SELECT * FROM (SELECT `id` FROM {$table_name} ORDER BY `id` DESC LIMIT 10000 OFFSET {$offset}) as `workaround_subquery_for_older_mysql_versions` );";
+            return false !== $this->wpdb->query($sql);
+        }
+        return false;
     }
     /**
      * Writes the record down to the log of the implementing handler
@@ -199,24 +251,24 @@ class WordPressHandler extends AbstractProcessingHandler
 
         // json encode values as needed
         array_walk($recordContExtra, function(&$value, $key) {
-        	if(is_array($value) || $value instanceof \Traversable) {
-        		$value = json_encode($value);
-        	}
+            if(is_array($value) || $value instanceof \Traversable) {
+                $value = json_encode($value);
+            }
         });
 
         $contentArray = $contentArray + $recordContExtra;
 
         if(count($this->additionalFields) > 0) {
-	        //Fill content array with "null" values if not provided
-	        $contentArray = $contentArray + array_combine(
-	            $this->additionalFields,
-	            array_fill(0, count($this->additionalFields), null)
-	        );
+            //Fill content array with "null" values if not provided
+            $contentArray = $contentArray + array_combine(
+                $this->additionalFields,
+                array_fill(0, count($this->additionalFields), null)
+            );
         }
 
         $table_name = $this->get_table_name();
 
         $this->wpdb->insert( $table_name, $contentArray );
-	    $this->maybe_truncate();
+        $this->maybe_truncate();
     }
 }

@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased v2]
 
+## [2.1.2] - 2020-11-29
+### Improved
+- Constructor can now be called without passing the global `$wpdb`, it'll be used by default.
+
+## [2.1.1] - 2020-11-29
+### Improved
+- The logging table size limiter caused slow logging once the limit was reached, due to the overhead of truncating the table after every row written. This is now fixed by doing the truncations in batches.
+
+### Changed
+- The `set_max_table_rows()` method is deprecated, use `conf_table_size_limiter()` instead.
+- The `maybe_truncate()` method was not intended to be used outside of the class, so it is not a public method anymore.
+
 ## [2.1.0] - 2020-10-15
 ### Added
 - Feature to limit the maximum number of rows to keep in the log table. Use `set_max_table_rows()` method on the handler instance to configure the limit.
@@ -57,11 +69,13 @@ V1 is continued to be updated for continued support for Monolog v1 and PHP versi
 No changelog had been maintained up to this point. Refer to the GIT commit history for more details.
 
 
-[Unreleased v2]: https://github.com/bradmkjr/monolog-wordpress/compare/2.1.0...HEAD
+[Unreleased v2]: https://github.com/bradmkjr/monolog-wordpress/compare/2.1.2...HEAD
+[2.1.2]: https://github.com/bradmkjr/monolog-wordpress/tree/2.1.2
+[2.1.1]: https://github.com/bradmkjr/monolog-wordpress/tree/2.1.1
 [2.1.0]: https://github.com/bradmkjr/monolog-wordpress/tree/2.1.0
 [2.0.1]: https://github.com/bradmkjr/monolog-wordpress/tree/2.0.1
 [2.0.0]: https://github.com/bradmkjr/monolog-wordpress/tree/2.0.0
-[v1 changes after v2 release]: https://github.com/bradmkjr/monolog-wordpress/compare/1.6.4...v2
+[v1 changes after v2 release]: https://github.com/bradmkjr/monolog-wordpress/compare/1.6.4...v1
 [1.6.4]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.4
 [1.6.3]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.3
 [1.6.2]: https://github.com/bradmkjr/monolog-wordpress/tree/1.6.2
