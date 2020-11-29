@@ -176,21 +176,21 @@ class WordPressHandler extends AbstractProcessingHandler
             $this->wpdb->query($sql);
         }
     }
-	/**
-	 * Deletes the oldest records from the log table to ensure there are no more
-	 * rows than the defined limit.
-	 *
-	 * Use {@see set_max_table_rows()} to configure the limit!
-	 *
-	 * @return boolean True if rows were deleted, false otherwise.
-	 */
-    public function maybe_truncate() {
-    	if ( $this->max_table_rows <= 0 ) {
-    		return false;
-	    }
-    	
-	    $table_name = $this->get_table_name();
-    	
+    /**
+     * Deletes the oldest records from the log table to ensure there are no more
+     * rows than the defined limit.
+     *
+     * Use {@see set_max_table_rows()} to configure the limit!
+     *
+     * @return boolean True if rows were deleted, false otherwise.
+     */
+    protected function maybe_truncate() {
+        if ( $this->max_table_rows <= 0 ) {
+            return false;
+        }
+        
+        $table_name = $this->get_table_name();
+        
         $sql = "SELECT count(*) FROM {$table_name};";
         $count = $this->wpdb->get_var($sql);
         
