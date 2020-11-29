@@ -42,10 +42,15 @@ class WordPressHandler extends AbstractProcessingHandler
      * as the values are stored in the column name $field.
      */
     private $additionalFields = array();
-	/**
-	 * @var int defines the maximum number of rows allowed in the log table. 0 means no limit
-	 */
+    /**
+     * @var int Defines the maximum number of rows allowed in the log table. 0 means no limit
+     */
     protected $max_table_rows = 0;
+    /**
+     * @var int Defines the number of rows deleted when limit is reached.
+     *          Do not choose a value too low, because it may generate huge database overhead!
+     */
+    protected $truncate_batch_size = 1;
     /**
      * Constructor of this class, sets the PDO and calls parent constructor
      *
@@ -71,18 +76,44 @@ class WordPressHandler extends AbstractProcessingHandler
         $this->additionalFields = $additionalFields;
         parent::__construct($level, $bubble);
     }
-	/**
-	 * Set the limit of maximum number of table rows to collect.
-	 * Use 0 (or any negative number) to disable limit.
-	 *
-	 * @param int $max_table_rows
-	 */
-	public function set_max_table_rows( $max_table_rows ) {
-		if ( ! is_int( $max_table_rows ) ) {
-			throw new \InvalidArgumentException('Maximum number of table rows must be an integer.');
-		}
-		$this->max_table_rows = max( 0, $max_table_rows );
-	}
+    
+    /**
+     * Configure the limiter for the maximum number of table rows used to collect log entries.
+     *
+     * @param int      $max_table_rows      The max number of rows to accumulate.
+     *                                      Use 0 (or any negative number) to disable limit.
+     * @param null|int $truncate_batch_size Optional.
+     *                                      This defines the number of rows deleted when the limit is reached.
+     *                                      Once the limit is reached, rows are deleted every time this number of log
+     *                                      entries added.
+     *                                      Do not set it to a small number, because deleting rows too often can create
+     *                                      significant performance issues.
+     *                                      Recommended minimum value is between 100 and few thousands.
+     *                                      Default: set to 10% of $max_table_rows
+     */
+    public function conf_table_size_limiter( $max_table_rows, $truncate_batch_size = null ) {
+        if ( ! is_int( $max_table_rows ) ) {
+            throw new \InvalidArgumentException('Maximum number of table rows must be an integer.');
+        }
+        if ( is_null( $truncate_batch_size ) ) {
+            $truncate_batch_size = (int) ( $max_table_rows / 10 );
+        }
+        if ( ! is_int( $truncate_batch_size ) ) {
+            throw new \InvalidArgumentException('Truncate batch size must be an integer or null.');
+        }
+        $this->max_table_rows = max( 0, $max_table_rows );
+        $this->truncate_batch_size = max( 1, $truncate_batch_size );
+    }
+    /**
+     * Set the limit for the number of table rows used to collect log entries.
+     *
+     *
+     * @param int      $max_table_rows      The max number of rows to accumulate.
+     *                                      Use 0 (or any negative number) to disable limit.
+     */
+    public function set_max_table_rows( $max_table_rows ) {
+        $this->conf_table_size_limiter( $max_table_rows );
+    }
     /**
      * Returns the full log tables name
      *
@@ -165,15 +196,16 @@ class WordPressHandler extends AbstractProcessingHandler
 	    $table_name = $this->get_table_name();
     	
         $sql = "SELECT count(*) FROM {$table_name};";
-	    $count = $this->wpdb->get_var($sql);
-	    
-	    if ( is_numeric( $count ) && $this->max_table_rows <= (int) $count ) {
-		    // using `LIMIT -1`, `LIMIT 0`, `LIMIT NULL` may not be compatible with all db systems
-		    // deleting 10000 rows in one go is good enough anyway, it'll converge pretty fast
-	    	$sql = "DELETE FROM {$table_name} WHERE `id` IN ( SELECT * FROM (SELECT `id` FROM {$table_name} ORDER BY `id` DESC LIMIT 10000 OFFSET {$this->max_table_rows}) as `workaround_subquery_for_older_mysql_versions` );";
-	    	return false !== $this->wpdb->query($sql);
-	    }
-	    return false;
+        $count = $this->wpdb->get_var($sql);
+        
+        if ( is_numeric( $count ) && $this->max_table_rows <= (int) $count ) {
+            $offset = $this->max_table_rows - $this->truncate_batch_size;
+            // using `LIMIT -1`, `LIMIT 0`, `LIMIT NULL` may not be compatible with all db systems
+            // deleting 10000 rows in one go is good enough anyway, it'll converge pretty fast
+            $sql = "DELETE FROM {$table_name} WHERE `id` IN ( SELECT * FROM (SELECT `id` FROM {$table_name} ORDER BY `id` DESC LIMIT 10000 OFFSET {$offset}) as `workaround_subquery_for_older_mysql_versions` );";
+            return false !== $this->wpdb->query($sql);
+        }
+        return false;
     }
     /**
      * Writes the record down to the log of the implementing handler
@@ -187,18 +219,18 @@ class WordPressHandler extends AbstractProcessingHandler
             $this->initialize($record);
         }
         //'context' contains the array
-	    $contentArray = array(
+        $contentArray = array(
             'channel' => $record['channel'],
             'level' => $record['level'],
-		    'message' => (isset($record['formatted']['message'])) ? $record['formatted']['message'] : $record['message'],
+            'message' => (isset($record['formatted']['message'])) ? $record['formatted']['message'] : $record['message'],
             'time' => $record['datetime']->format('U')
-	    );
+        );
 
         // Make sure to use the formatted values for context and extra, if available
         $recordExtra = (isset($record['formatted']['extra'])) ? $record['formatted']['extra'] : $record['extra'];
-	    $recordContext = (isset($record['formatted']['context'])) ? $record['formatted']['context'] : $record['context'];
-	
-	    $recordContExtra = array_merge( $recordExtra, $recordContext );
+        $recordContext = (isset($record['formatted']['context'])) ? $record['formatted']['context'] : $record['context'];
+    
+        $recordContExtra = array_merge( $recordExtra, $recordContext );
 
         // json encode values as needed
         array_walk($recordContExtra, function(&$value, $key) {
