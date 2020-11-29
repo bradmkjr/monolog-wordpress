@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2020-11-29
+### Improved
+- The logging table size limiter caused slow logging once the limit was reached, due to the overhead of truncating the table after every row written. This is now fixed by doing the truncations in batches.
+
+### Changed
+- The `set_max_table_rows()` method is deprecated, use `conf_table_size_limiter()` instead.
+- The `maybe_truncate()` method was not intended to be used outside of the class, so it is not a public method anymore.
 
 ## [1.7.0] - 2020-10-15
 ### Added
