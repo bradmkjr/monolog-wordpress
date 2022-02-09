@@ -268,7 +268,29 @@ class WordPressHandler extends AbstractProcessingHandler
 
         $table_name = $this->get_table_name();
 
-        $this->wpdb->insert( $table_name, $contentArray );
-        $this->maybe_truncate();
+        if (!$this->wpdb->insert( $table_name, $contentArray )) {
+            
+            // E_USER_ERROR would terminate PHP so we must only use WARNING or NOTICE
+            $php_error_level = ($record['level'] <= Logger::NOTICE) ? E_USER_NOTICE : E_USER_WARNING;
+    
+            if ( '' === $this->wpdb->last_error ) {
+                trigger_error('WordPressHandler failed to write a log record into the database and wpdb returned no error message. This typically happens in WordPress versions prior v5.9 when the message, or a context or an extra field is too long or contains invalid data. Since WordPress v5.9 too long or invalid data triggers a specific error message. If you are using WordPress v5.9 or later the root cause of the issue is unknown.', E_USER_WARNING);
+            }
+            else {
+                trigger_error('WordPressHandler failed to write a log record into the database. ' . $this->wpdb->last_error, E_USER_WARNING);
+            }
+    
+            trigger_error(
+                'WordPressHandler failed to log the following record.'.
+                ' Time: '.$contentArray['time'].
+                ' Channel: '.$contentArray['channel'].
+                ' Level: '.$contentArray['level'].
+                ' Message: `'.$contentArray['message'].'`',
+                $php_error_level
+            );
+        }
+        else {
+            $this->maybe_truncate();
+        }
     }
 }
