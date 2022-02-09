@@ -43,12 +43,14 @@ use WordPressHandler\WordPressHandler;
 
 // Create WordPressHandler
 $wordPressHandler = new WordPressHandler(null, "log", ['username', 'userid'], \Monolog\Logger::DEBUG);
+// OR
+$wordPressHandler = new WordPressHandler($wpdb, "log", array(array('name' => 'username','type' => 'VARCHAR(255) DEFAULT NULL'), array('name' => 'userid','type' => 'VARCHAR(255) DEFAULT NULL')), \Monolog\Logger::DEBUG);
 
 // Configure maximum number of rows to keep (old entries are deleted when reached)
 $wordPressHandler->conf_table_size_limiter( 250000 );
 
 // Setup array of extra fields
-$record = ['extra' => []];
+$record = ['extra' => ['extra_field' => 'userid','type' => 'VARCHAR(255) DEFAULT NULL']];
 
 // Create database table if needed, add extra fields from above
 $wordPressHandler->initialize($record);
@@ -74,12 +76,21 @@ register_activation_hook(__FILE__, 'my_plugin_activation');
 function my_plugin_activation() {
     $handler = new \WordPressHandler\WordPressHandler(
         null, "logs",
-        array('username', 'userid'),
+        array(
+            array(
+                'name' => 'username',
+                'type' => 'VARCHAR(255) DEFAULT NULL'
+            ),
+            array(
+                'name' => 'userid',
+                'type' => 'VARCHAR(255) DEFAULT NULL'
+            )
+        ),
         \Monolog\Logger::DEBUG
     );
 
     // setup array of extra fields
-    $record = array('extra' => array());
+	$record = array('extra' => array('extra_field' => 'userid','type' => 'VARCHAR(255) DEFAULT NULL'));
 
     // creates database table if needed, add extra fields from above
     $handler->initialize($record);
