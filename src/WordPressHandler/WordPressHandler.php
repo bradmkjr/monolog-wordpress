@@ -47,6 +47,12 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     protected $truncate_batch_size = 1;
     /**
+     * @var bool Indicates, if {@see \wpdb} has failed to write a log records and the related message has been logged
+     *           into the default system log already. This is used to only write such message to the log file once
+     *           per execution.
+     */
+    protected $wpdb_no_error_message_logged = false;
+    /**
      * Constructor of this class, sets own fields and calls parent constructor
      *
      * @param \wpdb|null $custom_wpdb      The {@see \wpdb} object of database connection.
@@ -93,7 +99,7 @@ class WordPressHandler extends AbstractProcessingHandler
         }
         $this->table = $table;
         $this->prefix = $this->wpdb->prefix;
-
+        
         $this->additionalFields = $additionalFields;
         parent::__construct($level, $bubble);
     }
@@ -151,31 +157,31 @@ class WordPressHandler extends AbstractProcessingHandler
      */
     public function initialize(array $record)
     {
-
+        
         // referenced
         // https://codex.wordpress.org/Creating_Tables_with_Plugins
-
+        
         // $this->wpdb->exec(
         //     'CREATE TABLE IF NOT EXISTS `'.$this->table.'` '
         //     .'(channel VARCHAR(255), level INTEGER, message LONGTEXT, time INTEGER UNSIGNED)'
         // );
-
+        
         $charset_collate = $this->wpdb->get_charset_collate();
-
+        
         $table_name = $this->get_table_name();
-
+        
         // allow for Extra fields
         $extraFields = '';
         foreach ($record['extra'] as $key => $val) {
             $extraFields.=",\n`$key` TEXT NULL DEFAULT NULL";
         }
-
+        
         // additional fields
         $additionalFields = '';
         foreach ($this->additionalFields as $f) {
             $additionalFields.=",\n`$f` TEXT NULL DEFAULT NULL";
         }
-
+        
         $sql = "CREATE TABLE $table_name (
             id INT(11) NOT NULL AUTO_INCREMENT,
             channel VARCHAR(255),
@@ -184,11 +190,11 @@ class WordPressHandler extends AbstractProcessingHandler
             time INTEGER UNSIGNED$extraFields$additionalFields,
             PRIMARY KEY  (id)
             ) $charset_collate;";
-
-
+        
+        
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
-
+        
         $this->initialized = true;
     }
     /**
@@ -198,7 +204,7 @@ class WordPressHandler extends AbstractProcessingHandler
     {
         $table_name = $this->get_table_name();
         $sql = "DROP TABLE IF EXISTS $table_name;";
-
+        
         if (!is_null($this->wpdb)) {
             $this->wpdb->query($sql);
         }
@@ -230,11 +236,17 @@ class WordPressHandler extends AbstractProcessingHandler
         }
         return false;
     }
+    
     /**
      * Writes the record down to the log of the implementing handler
      *
-     * @param  $record[]
+     * @param  $record []
+     *
      * @return void
+     *
+     * @throws \Psr\Log\InvalidArgumentException
+     *
+     * @noinspection ForgottenDebugOutputInspection
      */
     protected function write(array $record)
     {
@@ -248,55 +260,54 @@ class WordPressHandler extends AbstractProcessingHandler
             'message' => (isset($record['formatted']['message'])) ? $record['formatted']['message'] : $record['message'],
             'time' => $record['datetime']->format('U')
         );
-
+        
         // Make sure to use the formatted values for context and extra, if available
         $recordExtra = (isset($record['formatted']['extra'])) ? $record['formatted']['extra'] : $record['extra'];
         $recordContext = (isset($record['formatted']['context'])) ? $record['formatted']['context'] : $record['context'];
-    
+        
         $recordContExtra = array_merge( $recordExtra, $recordContext );
-
+        
         // json encode values as needed
         array_walk($recordContExtra, function(&$value, $key) {
             if(is_array($value) || $value instanceof \Traversable) {
                 $value = json_encode($value);
             }
         });
-
+        
         $contentArray = $contentArray + $recordContExtra;
-
+        
         if(count($this->additionalFields) > 0) {
             //Fill content array with "null" values if not provided
             $contentArray = $contentArray + array_combine(
-                $this->additionalFields,
-                array_fill(0, count($this->additionalFields), null)
-            );
+                    $this->additionalFields,
+                    array_fill(0, count($this->additionalFields), null)
+                );
         }
-
+        
         $table_name = $this->get_table_name();
-
+        
         if (!$this->wpdb->insert( $table_name, $contentArray )) {
-            
-            // E_USER_ERROR would terminate PHP so we must only use WARNING or NOTICE
-            $php_error_level = ($record['level'] <= Logger::NOTICE) ? E_USER_NOTICE : E_USER_WARNING;
-    
             if ( '' === $this->wpdb->last_error ) {
-                trigger_error('WordPressHandler failed to write a log record into the database and wpdb returned no error message. This typically happens in WordPress versions prior v5.9 when the message, or a context or an extra field is too long or contains invalid data. Since WordPress v5.9 too long or invalid data triggers a specific error message. If you are using WordPress v5.9 or later the root cause of the issue is unknown.', E_USER_WARNING);
+                // Since this error message does not include details it is enough to log it only once
+                if (!$this->wpdb_no_error_message_logged) {
+                    if ( function_exists('is_wp_version_compatible') && is_wp_version_compatible('5.9') ) {
+                        $this->wpdb_no_error_message_logged = error_log( 'Monolog Error:  WordPressHandler failed to write a log record into the database and wpdb returned no error message. The root cause of the issue is unknown.' );
+                    }
+                    else {
+                        $this->wpdb_no_error_message_logged = error_log( 'Monolog Error:  WordPressHandler failed to write a log record into the database and wpdb returned no error message. This typically happens when the message or a context or an extra field is too long or contains invalid data.' );
+                    }
+                }
             }
             else {
-                trigger_error('WordPressHandler failed to write a log record into the database. ' . $this->wpdb->last_error, E_USER_WARNING);
+                error_log('Monolog Error:  WordPressHandler failed to write a log record into the database. ' . $this->wpdb->last_error);
             }
-    
-            trigger_error(
-                'WordPressHandler failed to log the following record.'.
-                ' Time: '.$contentArray['time'].
-                ' Channel: '.$contentArray['channel'].
-                ' Level: '.$contentArray['level'].
-                ' Message: `'.$contentArray['message'].'`',
-                $php_error_level
+            
+            error_log(
+                'Monolog fallback:  '.$contentArray['channel'].' '.ucfirst(strtolower(Logger::getLevelName($contentArray['level']))).': '.$contentArray['message']
             );
         }
-		else {
-			$this->maybe_truncate();
-		}
+        else {
+            $this->maybe_truncate();
+        }
     }
 }
