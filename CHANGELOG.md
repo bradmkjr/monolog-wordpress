@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased v2]
 
+## [2.2.1] - 2022-02-10
+### Improved
+- More concise fallback error logging when wpdb fails: The error message is only logged once per execution, it is adjusted based on the actual WordPress version and the format of the actual fallback logging is more compact as well.
+
 ## [2.2.0] - 2022-02-09
 ### Improved
 - The handler did not check if inserting the records into the db was successful or not. This could cause important log messages to be lost unnoticed. The handler now logs a warning into the default PHP error log and also logs the failed record there for reference.
@@ -73,7 +77,8 @@ V1 is continued to be updated for continued support for Monolog v1 and PHP versi
 No changelog had been maintained up to this point. Refer to the GIT commit history for more details.
 
 
-[Unreleased v2]: https://github.com/bradmkjr/monolog-wordpress/compare/2.2.0...HEAD
+[Unreleased v2]: https://github.com/bradmkjr/monolog-wordpress/compare/2.2.1...HEAD
+[2.2.1]: https://github.com/bradmkjr/monolog-wordpress/tree/2.2.1
 [2.2.0]: https://github.com/bradmkjr/monolog-wordpress/tree/2.2.0
 [2.1.2]: https://github.com/bradmkjr/monolog-wordpress/tree/2.1.2
 [2.1.1]: https://github.com/bradmkjr/monolog-wordpress/tree/2.1.1
