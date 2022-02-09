@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased v2]
 
+## [2.2.0] - 2022-02-09
+### Improved
+- The handler did not check if inserting the records into the db was successful or not. This could cause important log messages to be lost unnoticed. The handler now logs a warning into the default PHP error log and also logs the failed record there for reference.
+
 ## [2.1.2] - 2020-11-29
 ### Improved
 - Constructor can now be called without passing the global `$wpdb`, it'll be used by default.
@@ -69,7 +73,8 @@ V1 is continued to be updated for continued support for Monolog v1 and PHP versi
 No changelog had been maintained up to this point. Refer to the GIT commit history for more details.
 
 
-[Unreleased v2]: https://github.com/bradmkjr/monolog-wordpress/compare/2.1.2...HEAD
+[Unreleased v2]: https://github.com/bradmkjr/monolog-wordpress/compare/2.2.0...HEAD
+[2.2.0]: https://github.com/bradmkjr/monolog-wordpress/tree/2.2.0
 [2.1.2]: https://github.com/bradmkjr/monolog-wordpress/tree/2.1.2
 [2.1.1]: https://github.com/bradmkjr/monolog-wordpress/tree/2.1.1
 [2.1.0]: https://github.com/bradmkjr/monolog-wordpress/tree/2.1.0
