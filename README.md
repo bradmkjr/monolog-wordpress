@@ -22,7 +22,7 @@ monolog-wordpress is available via composer. Just add the following line to your
 Since Monolog v2 broke compatibility with PHP versions before v7.1 some may want to keep using Monolog v1. **monolog-wordpress** is therefore offered in two major versions:
 * [v1](https://github.com/bradmkjr/monolog-wordpress/tree/v1) - compatible with Monolog v1 and PHP v5.3 or later.
 * [v2](https://github.com/bradmkjr/monolog-wordpress/tree/v2) - compatible with Monolog v2 and PHP v7.1 or later.
-* [v3](https://github.com/bradmkjr/monolog-wordpress/tree/master) - compatible with Monolog v3 and PHP v8.0 or later.
+* [v3](https://github.com/bradmkjr/monolog-wordpress/tree/master) - compatible with Monolog v3 and PHP v8.1 or later.
 
 Apart from the compatibility differences stated above the features of v1 and v2 are going to be kept the same as much as possible.
 
