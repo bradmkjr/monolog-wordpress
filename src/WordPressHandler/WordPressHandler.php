@@ -2,6 +2,7 @@
 namespace WordPressHandler;
 
 use Monolog\Level;
+use Monolog\Logger;
 use Monolog\LogRecord;
 use Monolog\Handler\AbstractProcessingHandler;
 
@@ -65,7 +66,7 @@ class WordPressHandler extends AbstractProcessingHandler
      * @param string[]   $additionalFields Additional Context Parameters to store in database
      *                                     Default: empty array i.e. no additional fields
      * @param int|string $level            The minimum logging level at which this handler will be triggered.
-     *                                     Default: {@see Logger::DEBUG}
+     *                                     Default: {@see Level::Debug}
      * @param bool       $bubble           Whether the messages that are handled can bubble up the stack or not.
      *                                     Default: true
      */
@@ -298,7 +299,7 @@ class WordPressHandler extends AbstractProcessingHandler
             }
             
             error_log(
-                'Monolog fallback:  '.$contentArray['channel'].' '.ucfirst(strtolower(Level::fromName($contentArray['level']))).': '.$contentArray['message']
+                'Monolog fallback:  '.$contentArray['channel'].' '.ucfirst(strtolower(Logger::getLevelName($contentArray['level']))).': '.$contentArray['message']
             );
         }
         else {
