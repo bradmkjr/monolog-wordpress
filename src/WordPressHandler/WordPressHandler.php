@@ -252,7 +252,7 @@ class WordPressHandler extends AbstractProcessingHandler
         //'context' contains the array
         $contentArray = array(
             'channel' => $record->channel,
-            'level' => $record->level,
+            'level' => $record->level->value,
             'message' => (isset($record->formatted['message'])) ? $record->formatted['message'] : $record->message,
             'time' => $record->datetime->format('U')
         );
