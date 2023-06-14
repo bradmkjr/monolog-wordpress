@@ -1,7 +1,9 @@
 <?php
 namespace WordPressHandler;
 
+use Monolog\Level;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Monolog\Handler\AbstractProcessingHandler;
 
 /**
@@ -64,7 +66,7 @@ class WordPressHandler extends AbstractProcessingHandler
      * @param string[]   $additionalFields Additional Context Parameters to store in database
      *                                     Default: empty array i.e. no additional fields
      * @param int|string $level            The minimum logging level at which this handler will be triggered.
-     *                                     Default: {@see Logger::DEBUG}
+     *                                     Default: {@see Level::Debug}
      * @param bool       $bubble           Whether the messages that are handled can bubble up the stack or not.
      *                                     Default: true
      */
@@ -72,7 +74,7 @@ class WordPressHandler extends AbstractProcessingHandler
         $custom_wpdb = null,
         $table = 'logs',
         $additionalFields = array(),
-        $level = Logger::DEBUG,
+        $level = Level::Debug,
         $bubble = true
     ) {
         if ( ! is_null($custom_wpdb) ) {
@@ -149,7 +151,7 @@ class WordPressHandler extends AbstractProcessingHandler
     /**
      * Initializes this handler by creating the table if it not exists
      */
-    public function initialize(array $record)
+    public function initialize(LogRecord $record)
     {
         
         // referenced
@@ -166,7 +168,7 @@ class WordPressHandler extends AbstractProcessingHandler
         
         // allow for Extra fields
         $extraFields = '';
-        foreach ($record['extra'] as $key => $val) {
+        foreach ($record->extra as $key => $val) {
             $extraFields.=",\n`$key` TEXT NULL DEFAULT NULL";
         }
         
@@ -242,22 +244,22 @@ class WordPressHandler extends AbstractProcessingHandler
      *
      * @noinspection ForgottenDebugOutputInspection
      */
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         if (!$this->initialized) {
             $this->initialize($record);
         }
         //'context' contains the array
         $contentArray = array(
-            'channel' => $record['channel'],
-            'level' => $record['level'],
-            'message' => (isset($record['formatted']['message'])) ? $record['formatted']['message'] : $record['message'],
-            'time' => $record['datetime']->format('U')
+            'channel' => $record->channel,
+            'level' => $record->level->value,
+            'message' => (isset($record->formatted['message'])) ? $record->formatted['message'] : $record->message,
+            'time' => $record->datetime->format('U')
         );
         
         // Make sure to use the formatted values for context and extra, if available
-        $recordExtra = (isset($record['formatted']['extra'])) ? $record['formatted']['extra'] : $record['extra'];
-        $recordContext = (isset($record['formatted']['context'])) ? $record['formatted']['context'] : $record['context'];
+        $recordExtra = (isset($record->formatted['extra'])) ? $record->formatted['extra'] : $record->extra;
+        $recordContext = (isset($record->formatted['context'])) ? $record->formatted['context'] : $record->context;
         
         $recordContExtra = array_merge( $recordExtra, $recordContext );
         
